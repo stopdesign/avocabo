@@ -55,9 +55,6 @@
             <th></th>
             <th>Created</th>
             <th>Count</th>
-            <th>Level-1</th>
-            <th>Attempts</th>
-            <th>Error rate</th>
             <th>Days since<br/>practice</th>
         </tr>
     {% for list in lists %}
@@ -70,17 +67,6 @@
             </td>
             <td>
                 {{ list.words.all.count }}
-            </td>
-            <td>
-{#                {{ list.stat.level_1 }}#}
-            </td>
-            <td>
-{#                {{ list.attempts_cnt }}#}
-            </td>
-            <td>
-{#                {% if list.err_rate is not None %}#}
-{#                    {{ list.err_rate }}%#}
-{#                {% endif %}#}
             </td>
             <td>
                 {{ list.av_date }}
