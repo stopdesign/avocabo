@@ -25,19 +25,10 @@ makemigrations:
 runserver:
 	$(VENV) $(MANAGER) runserver 127.0.0.1:8120
 
-.PHONY : front
-front:
-	cd $(ROOT_DIR)/front ; npm install ; NODE_ENV="production" npm run build
-
-.PHONY : frontcopy
-frontcopy:
-	cp -r $(ROOT_DIR)/front/public $(ROOT_DIR)/www/
-
 .PHONY : reload
 reload:
-	cd $(ROOT_DIR) ; sudo supervisorctl restart all
-#	cd $(ROOT_DIR) ; touch reload
+	cd $(ROOT_DIR) ; touch reload
 
 # Update instance
 .PHONY : update
-update: front pip migrate static frontcopy reload
+update: pip migrate static reload
