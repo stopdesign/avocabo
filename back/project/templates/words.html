@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+    <style>
+        .word_spelling {
+            white-space: nowrap;
+            width: 120px;
+            font-weight: bold;
+        }
+        .def_spelling {
+            width: 180px;
+        }
+        .word_pos,
+        .def_level {
+            color: #999;
+            font-style: italic;
+            font-size: 0.8em;
+        }
+        table {
+            width: 100%;
+        }
+        table td {
+            vertical-align: top;
+            padding: 15px 10px;
+        }
+        table td:first-child {
+            padding-left: 0;
+        }
+        table td:last-child {
+            padding-right: 0;
+        }
+        p {
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+        }
+        h1 {
+
+        }
+        .word_tag-container {
+
+        }
+        .word_tag {
+            border: 2px solid;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 2px 8px;
+            display: inline-block;
+        }
+        .word_tag-err {
+            color: #d00;
+            border-color: #d00;
+        }
+        .word_tag-new {
+            color: #69f;
+            border-color: #69f;
+        }
+        .example {
+            font-size: 14px;
+            color: #999;
+            margin-top: 10px;
+        }
+        .translation {
+            font-size: 14px;
+            color: #63c;
+        }
+    </style>
+
+    <p><a href="/">« Back</a></p>
+    <h1>{{ list.name }}</h1>
+    <div>
+{#        <p style="font-size: 0.8em; margin: 0">#}
+{#            All: {{ list.stat.cnt_all }}, level_1: {{ list.stat.level_1 }}, done: {{ list.stat.done }}#}
+{#        </p>#}
+{#        <p style="font-size: 0.8em; margin-top: 0">#}
+{#            {{ list.created_at }}#}
+{#        </p>#}
+{#        <p style="margin-top: 0.8em">#}
+{#            Error rate: {% if list.err_rate is not None %}{{ list.err_rate }}%{% else %}unknown{% endif %}#}
+{#        </p>#}
+    </div>
+    <br/>
+
+    <table>
+    {% for word in words %}
+        {% for definition in word.definitions.all %}
+        <tr>
+            <td>
+                {% if forloop.first %}
+                    <p class="word_spelling">{{ word.spelling }}</p>
+                    <p class="word_pos">{{ word.part_of_speech }}, {{ word.zipf }}</p>
+                {% endif %}
+            </td>
+            <td class="word_tag-container">
+                {% if forloop.first and word.tag %}
+                    <span class="word_tag word_tag-{{ word.tag|lower }}">{{ word.tag }}</span>
+                {% endif %}
+            </td>
+            <td>
+                <p class="def_spelling">{{ definition.spelling }}</p>
+                <p class="def_level">{{ definition.level }}</p>
+            </td>
+            <td>
+                <p>{{ definition.interpretation }}</p>
+                {% for example in definition.examples.all %}
+                    <p class="example">{{ example.text }}</p>
+                {% endfor %}
+            </td>
+            <td><p class="translation">{{ definition.translation }}</p></td>
+        </tr>
+        {% endfor %}
+    {% endfor %}
+    </table>
+
+{% endblock %}

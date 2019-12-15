@@ -1,0 +1,246 @@
+body {
+  font-family: "PT Sans","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
+  cursor: default;
+}
+
+.login #header {
+  padding-bottom: 2px !important;
+}
+
+a:link, a:visited {
+    color: #337ab7;
+}
+a:focus, a:hover {
+    color: #e00;
+}
+
+*:focus {
+  /*outline: 1px dotted #000;*/
+  outline: none;
+}
+input[type='checkbox']:focus,
+input[type='radio']:focus {
+  outline: auto;
+}
+
+.content-main-narrow {
+  width: 600px;
+}
+
+#header {
+  background: #444;
+  color: #eee;
+  border-bottom: 3px solid #e00;
+  height: 28px;
+  line-height: 30px;
+}
+#branding h1,
+#branding h1 a,
+#branding h1 a:link,
+#branding h1 a:visited {
+  color: #fff;
+  font-size: 20px;
+}
+#branding h1 a:hover,
+#branding h1 a:focus {
+  color: #d5d5d5;
+}
+
+
+
+.module h2,
+.module caption,
+.inline-group h2 {
+  background: none;
+  color: #444;
+  border-bottom: 1px solid #eee;
+  padding-top: 7px;
+  padding-bottom: 5px;
+  font-size: 18px;
+  font-weight: bold;
+}
+.selector h2 {
+  font-size: 14px;
+}
+.selector .selector-chosen h2 {
+  background: #666;
+}
+.module h2 a.section,
+.module caption a.section,
+.inline-group h2 a.section {
+  color: #444;
+  background: none;
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 18px;
+  font-weight: bold;
+  text-decoration: none;
+}
+.module h2 a.section:hover,
+.module caption a.section:hover,
+.inline-group h2 a.section:hover {
+  color: #e00;
+}
+
+div.breadcrumbs {
+  background: #eee;
+  color: #666;
+}
+div.breadcrumbs a,
+div.breadcrumbs a:focus,
+div.breadcrumbs a:hover {
+  color: #666;
+  font-weight: bold;
+}
+div.breadcrumbs a:hover {
+  color: #333;
+}
+#user-tools {
+  font-size: 14px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+#user-tools a {
+  border: none;
+  text-decoration: underline;
+}
+#user-tools a:hover {
+  color: #d5d5d5;
+  text-decoration: underline;
+}
+
+.object-tools a:link, .object-tools a:visited {
+  font-size: 13px;
+  text-transform: none;
+  border-radius: 3px;
+}
+
+.deletelink, .addlink, .changelink, .inlinechangelink {
+  background: none;
+  padding: 0;
+}
+
+#content-related .actionlist li {
+  padding-left: 0;
+}
+
+.button, input[type=submit], input[type=button], .submit-row input, a.button {
+  background: #999;
+  border-radius: 3px;
+}
+.button:active, input[type=submit]:active, input[type=button]:active, .button:focus,
+input[type=submit]:focus, input[type=button]:focus, .button:hover, input[type=submit]:hover, input[type=button]:hover {
+  background: #888;
+}
+
+#changelist-form table p {
+  margin: 0 0 5px 0;
+  padding: 0;
+  line-height: 1.3;
+}
+
+.dashboard #content h1 {
+  display: none;
+}
+.dashboard table th:first-child,
+.dashboard table td:first-child {
+  padding-left: 0;
+}
+.dashboard table th:last-child,
+.dashboard table td:last-child {
+  padding-right: 0;
+}
+.dashboard .module table td:last-child a {
+  padding-right: 0;
+}
+.dashboard .module h2,
+.dashboard .module caption,
+.dashboard .inline-group h2 {
+  background: none;
+  color: #444;
+  border-bottom: 1px solid #eee;
+  padding: 7px 0 5px;
+}
+
+
+#content .paginator a,
+#content .paginator span {
+  border-radius: 3px;
+  margin-right: 2px;
+}
+#content .paginator a {
+  background: #e5e5e5;
+  color: #333;
+}
+#content .paginator a:hover,
+#content .paginator a:focus {
+  background: #ccc;
+}
+#content .paginator .this-page {
+  background: #888;
+  color: #fff;
+}
+
+
+#content-related {
+  background: none;
+  float: right;
+  position: relative;
+  margin-right: -370px;
+}
+#content-related h2 {
+  padding: 7px 0 5px;
+  margin: 0;
+  font-size: 18px;
+}
+#content-related p {
+  padding: 0;
+}
+#content-related h3 {
+  padding: 0;
+  margin: 8px 0 0 0;
+  color: #333;
+}
+
+
+
+
+
+#content-main.constance table tr > :nth-child(1) {
+  width: 20%;
+  min-width: 200px;
+}
+#content-main.constance table tr > :nth-child(2) {
+  width: 32%;
+}
+#content-main.constance table tr > :nth-child(3) {
+  width: 42%;
+}
+#content-main.constance table tr > :nth-child(4) {
+  width: 6%;
+}
+#content-main.constance .module h2 {
+  padding-left: 0;
+}
+#content-main.constance .reset-link {
+  font-size: 11px;
+}
+.constance input[type=text]
+{
+  width: 27em;
+  font-family: 'dejavu sans mono', 'menlo', monospace;
+  font-size: 12px;
+}
+
+
+
+
+#employeerevision_form .field-data div.readonly,
+#companyrevision_form .field-data div.readonly {
+  font-family: 'dejavu sans mono', 'menlo', monospace;
+  white-space: pre;
+}
+
+.field-address, .field-tx_id {
+  font-family: 'dejavu sans mono', 'menlo', monospace;
+}

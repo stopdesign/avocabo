@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}500{% endblock %}
+
+{% block step_title %}500 Error{% endblock %}
+
+{% block content %}
+    <div class="content">
+        <div class="one-column">
+            <div class="error-block">
+                <h1 class="error-block__title">Hmm…</h1>
+                <p class="error-block__text">
+                  It looks like one of our servers might have decided to enjoy some free Primalbase coffee. <br/> Don’t worry, we’ll get them back to work shortly. In the meantime, why not try refreshing the page? <br/> If the problem keeps happening, feel free to contact us.
+                </p>
+            </div>
+            <button
+              type="button"
+              onclick="window.location.reload();"
+            >
+              Reload
+            </button>
+        </div>
+    </div>
+{% endblock content %}

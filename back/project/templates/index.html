@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+    <style>
+        td, th {
+            padding: 10px 15px;
+            text-align: right;
+            font-size: 16px;
+        }
+        td:first-child {
+            text-align: left;
+        }
+        th {
+            vertical-align: top;
+        }
+
+        #graph {
+
+        }
+        h3 {
+            margin: 50px 0 0 16px;
+            font-weight: normal;
+        }
+
+        path {
+            stroke: steelblue;
+            stroke-width: 2px;
+            fill: none;
+        }
+
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: grey;
+            stroke-width: 1px;
+            shape-rendering: crispEdges;
+        }
+
+        .grid line {
+            stroke: lightgrey;
+            stroke-opacity: 0.7;
+            shape-rendering: crispEdges;
+        }
+
+        .grid path {
+            stroke-width: 0;
+        }
+
+    </style>
+
+    <table>
+        <tr>
+            <th></th>
+            <th>Created</th>
+            <th>Count</th>
+            <th>Level-1</th>
+            <th>Attempts</th>
+            <th>Error rate</th>
+            <th>Days since<br/>practice</th>
+        </tr>
+    {% for list in lists %}
+        <tr>
+            <td>
+                <a href="/list/{{ list.id }}/">{{ list.name }}</a>
+            </td>
+            <td>
+                {{ list.created_at|date }}
+            </td>
+            <td>
+                {{ list.words.all.count }}
+            </td>
+            <td>
+{#                {{ list.stat.level_1 }}#}
+            </td>
+            <td>
+{#                {{ list.attempts_cnt }}#}
+            </td>
+            <td>
+{#                {% if list.err_rate is not None %}#}
+{#                    {{ list.err_rate }}%#}
+{#                {% endif %}#}
+            </td>
+            <td>
+                {{ list.av_date }}
+            </td>
+        </tr>
+    {% endfor %}
+    </table>
+
+    <h3>User Rotation</h3>
+    <p>
+        {{ user_rotation }}
+    </p>
+
+
+    <h3>Answers per day</h3>
+    <div id="graph"></div>
+
+    <script src="https://d3js.org/d3.v4.0.0-alpha.29.min.js"></script>
+
+    <script>
+
+        var data = {{ counts|safe }};
+
+        // Parse the date / time
+        var parseDate = d3.timeParse("%Y-%m-%d");
+
+        data.forEach(function(d) {
+            d.dt = parseDate(d.dt);
+            d.cnt = +d.cnt;
+        });
+
+        console.log(data);
+
+        var margin = {top: 20, right: 20, bottom: 100, left: 47},
+            width = 650 - margin.left - margin.right,
+            height = 300 - margin.top - margin.bottom;
+
+        var x = d3.scaleBand().rangeRound([0, width], .05).padding(0.2);
+
+        var y = d3.scaleLinear().range([height, 0]);
+
+        var xAxis = d3.axisBottom()
+            .scale(x)
+            .tickFormat(d3.timeFormat('%d.%m'));
+
+        var yAxis = d3.axisLeft()
+            .ticks(5, 'f')
+            .scale(y)
+            .tickSize(4);
+
+        var yAxis1 = d3.axisLeft()
+            .ticks(5, 'f')
+            .scale(y)
+            .tickSize(-width)
+            .tickFormat('');
+
+        var svg = d3.select('#graph').append('svg')
+            .attr('width', width + margin.left + margin.right)
+            .attr('height', height + margin.top + margin.bottom)
+          .append('g')
+            .attr('transform',
+                  'translate(' + margin.left + ',' + margin.top + ')');
+
+
+
+
+          x.domain(data.map(function(d) { return d.dt; }));
+          y.domain([0, d3.max(data, function(d) { return d.cnt; })]);
+
+          svg.append('g')
+              .attr('class', 'x axis')
+              .attr('transform', 'translate(0,' + height + ')')
+              .call(xAxis)
+            .selectAll('text')
+                .style('font-size', '12px')
+                .attr('dy', '1em');
+            {#  .style('text-anchor', 'end')#}
+            {#  .attr('dx', '-.8em')#}
+            {#  .attr('dy', '-.55em')#}
+            {#  .attr('transform', 'rotate(-90)' );#}
+
+          svg.append('g')
+              .attr('class', 'grid')
+              .call(yAxis1);
+
+          svg.append('g')
+              .attr('class', 'y axis')
+              .call(yAxis)
+            .selectAll('text')
+                .style('font-size', '12px');
+
+          svg.selectAll('bar')
+              .data(data)
+            .enter().append('rect')
+              .style('fill', '#999')
+              .attr('x', function(d) { return x(d.dt); })
+              .attr('width', x.bandwidth())
+              .attr('y', function(d) { return y(d.cnt); })
+              .attr('height', function(d) { return height - y(d.cnt); });
+
+
+    </script>
+
+{% endblock %}

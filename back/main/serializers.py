@@ -1,0 +1,92 @@
+import logging
+from rest_framework.serializers import ModelSerializer, SerializerMethodField
+from main.models import List, Word, Definition, Example, Pronunciation, Attempt
+
+
+logger = logging.getLogger(__name__)
+
+
+class PronunciationSerializer(ModelSerializer):
+
+    class Meta:
+        model = Pronunciation
+        fields = ['id', 'audio', 'description']
+
+
+class ExampleSerializer(ModelSerializer):
+
+    class Meta:
+        model = Example
+        fields = ['id', 'text']
+
+
+class DefinitionSerializer(ModelSerializer):
+    # pronunciations = PronunciationSerializer(many=True, read_only=True)
+    examples = ExampleSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Definition
+        fields = ['id', 'spelling', 'interpretation', 'translation', 'level', 'context', 'note', 'examples']
+
+
+class WordSerializer(ModelSerializer):
+    # definitions = DefinitionSerializer(many=True, read_only=True)
+    definitions = SerializerMethodField()
+    pronunciation = SerializerMethodField()
+
+    def get_pronunciation(self, obj):
+        pronunciation = obj.pronunciations.order_by('-description').first()
+        if pronunciation:
+            return pronunciation.audio.url
+        return None
+
+    def get_definitions(self, obj):
+        qs = obj.definitions.all()
+        leveled_count = 0
+        # all_count = qs.count()
+        for d in qs:
+            if d.level:
+                leveled_count += 1
+        if leveled_count > 3:
+            qs = obj.definitions.exclude(level='').exclude(level=None)
+        if leveled_count == 0:
+            qs = qs[:3]
+        else:
+            qs = qs[:5]
+        return DefinitionSerializer(qs, many=True).data
+
+    class Meta:
+        model = Word
+        fields = ['id', 'spelling', 'is_hidden', 'definitions', 'pronunciation',
+                  'transcription', 'part_of_speech', 'zipf']
+
+
+class ListSerializer(ModelSerializer):
+    count = SerializerMethodField()
+
+    def get_count(self, obj):
+        return obj.words.count()
+
+    class Meta:
+        model = List
+        fields = ['id', 'name', 'count']  #, 'stat']
+
+
+class ListDetailsSerializer(ModelSerializer):
+    # words = WordSerializer(many=True, read_only=True)
+    words = SerializerMethodField()
+
+    def get_words(self, obj):
+        qs = obj.words.filter().order_by('spelling')[:10]
+        return WordSerializer(qs, many=True).data
+
+    class Meta:
+        model = List
+        fields = ['id', 'name', 'words']
+
+
+class AttemptSerializer(ModelSerializer):
+
+    class Meta:
+        model = Attempt
+        fields = '__all__'
