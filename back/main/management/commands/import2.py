@@ -279,8 +279,8 @@ class Command(BaseCommand):
                 region = el.select('.region')[0].get_text(strip=True)
             except IndexError:
                 region = None
-            if el.select('.audio_play_button'):
-                mp3 = el.select('.audio_play_button')[0]['data-src-mp3']
+            if el.select('source[type="audio/mpeg"]'):
+                mp3 = el.select('source[type="audio/mpeg"]')[0]['src']
                 prons.append({
                     'url': 'https://dictionary.cambridge.org' + mp3,
                     'region': region,
