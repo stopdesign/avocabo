@@ -33,8 +33,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        self.def_list = List.objects.get(id=15)
-        self.test('4.txt')
+        self.def_list = List.objects.get(id=22)
+        self.test('dariko_1.txt')
 
     def send_waves(self):
         pass
@@ -203,8 +203,8 @@ class Command(BaseCommand):
 
         soup = BeautifulSoup(r.text, 'html.parser')
 
-        spelling = self.parse(r.text, r'<div class="h3 di-title cdo-section-title-hw">([^<]*?)</div>')
-        pos = self.parse(r.text, r'><span class="pos">([^<]*?)</span>')
+        spelling = self.parse(r.text, r'<div class="h2 tw-bw dhw dpos-h_hw di-title ">([^<]*?)</div>')
+        pos = self.parse(r.text, r'><span class="pos dpos"[^>]*?>([^<]*?)</span>')
         page_id = requests.utils.urlparse(r.url).path.split('/')[-1]
 
         # исключение повторной загрузки той же страницы
@@ -218,8 +218,9 @@ class Command(BaseCommand):
             logger.error('Word "%s" was not found' % url_spelling)
             return False
 
+        # поиск слова, о котором эта страница
         try:
-            word_bs = soup.find('div', {'class': 'h3 di-title cdo-section-title-hw'}).get_text(strip=True)
+            word_bs = soup.find('div', {'class': 'h2 tw-bw dhw dpos-h_hw di-title'}).get_text(strip=True)
             try:
                 pos_bs = soup.select('span.posgram > span.pos')[0].get_text(strip=True)
             except IndexError:
@@ -232,6 +233,8 @@ class Command(BaseCommand):
         if abs(len(url_spelling) - len(spelling)) > 3:
             logger.warning('Not exactly: "%s" != "%s"' % (url_spelling, spelling))
 
+        # что это за хуйня?
+        # ссылка на другую статью?
         for el in soup.select('.grad-trans-pseudo li'):
             linked_word = el.select('b')[0].get_text(strip=True, separator=' ')
             linked_word_pos = None
@@ -254,8 +257,11 @@ class Command(BaseCommand):
                     self.parse_pos(new_url)
 
         entry_body = soup.find('div', {'class': 'normal-entry-body'})
+
+        # не обрабатываются
         idiom_body = soup.find('div', {'class': 'idiom-body'})
 
+        # произношение
         pron_info = soup.select('.di-info > .pron-info')
         prons = []
         for el in pron_info:
@@ -299,6 +305,7 @@ class Command(BaseCommand):
         word.save()
         self.def_list.words.add(word)
 
+        # произношения
         pronunciations_saved = []
         for pronunciation in prons:
             if pronunciation['url'] not in pronunciations_saved:
@@ -311,6 +318,7 @@ class Command(BaseCommand):
                 pro_obj.save()
                 self.download_sound(pronunciation['url'], pro_obj)
 
+        # значения
         if entry_body:
             title = ''
 
@@ -356,7 +364,7 @@ class Command(BaseCommand):
 
                 # print(title)
                 # print(xref)
-                # print(trans)
+                # # print(trans)
                 # print(interpretation)
                 # print(json.dumps(examp, indent=2))
                 # print()
