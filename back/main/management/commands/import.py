@@ -20,7 +20,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        self.test('2.txt')
+        self.def_list = List.objects.get(id=21)
+        self.test('dariko_1.txt')
 
     def send_waves(self):
         pass
@@ -113,8 +114,6 @@ class Command(BaseCommand):
         # all_text = f.read().decode('string-escape').decode('utf-8')
         all_text = f.read().strip().replace(u'—', '-')  # [399200:399300]
 
-        def_list = List.objects.get(id=4)
-
         words = []
 
         for word in all_text.replace('\r', ' ').replace('\t', ' ').replace('?', ' ').strip().split('\n'):
@@ -154,7 +153,7 @@ class Command(BaseCommand):
 
             # добавляю слово в список
             word.save()
-            def_list.words.add(word)
+            self.def_list.words.add(word)
 
             transcription = ''
             pronunciations = []
@@ -238,7 +237,7 @@ class Command(BaseCommand):
 
             # добавляю слово в список
             word.save()
-            def_list.words.add(word)
+            self.def_list.words.add(word)
 
             for definition in res['def']:
 

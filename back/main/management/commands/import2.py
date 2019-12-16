@@ -405,7 +405,7 @@ class Command(BaseCommand):
         if idiom_body:
             logger.warning('IDIOM')
 
-
+        return word
 
 
 
