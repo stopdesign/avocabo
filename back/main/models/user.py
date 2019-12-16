@@ -88,7 +88,7 @@ class User(AbstractUser):
     objects = UserModelManager()
 
     # это подписки на темы
-    subscriptions = models.ManyToManyField('List', related_name='user_set')
+    subscriptions = models.ManyToManyField('List', related_name='user_set', blank=True)
 
     # слова в ротации, id через пробел
     rotation = models.TextField(max_length=1000, null=False, default='', blank=True)
