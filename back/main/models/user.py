@@ -2,6 +2,7 @@ import uuid
 import hashlib
 import logging
 from datetime import datetime
+from django.db.models import Q
 from pytz import utc
 from django.db import models
 from django.conf import settings
@@ -102,7 +103,13 @@ class User(AbstractUser):
 
     @property
     def user_subscriptions(self):
-        return self.subscriptions.all()
+        from main.models import List
+        if self.pk:
+            subscriptions = self.subscriptions.all().values_list('id', flat=True)
+            items = List.objects.filter(Q(owner=self) | Q(sharable=True) | Q(id__in=subscriptions))
+        else:
+            items = List.objects.filter(sharable=True)
+        return items
 
     def __str__(self):
         return self.email

@@ -120,8 +120,8 @@ class ListAPIListView(APIView):
         #   свои подписки (subscriptions)
 
         if request.user.is_authenticated:
-            subscriptions = request.user.subscriptions.all().values_list('id', flat=True)
-            items = List.objects.filter(Q(owner=request.user) | Q(sharable=True) | Q(id__in=subscriptions))
+            subscriptions = request.user.user_subscriptions.values_list('id', flat=True)
+            items = List.objects.filter(id__in=subscriptions)
 
             print('subscriptions', subscriptions)
             print('public', List.objects.filter(sharable=True).values_list('id', flat=True))
