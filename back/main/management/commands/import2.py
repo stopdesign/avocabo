@@ -30,10 +30,12 @@ class Command(BaseCommand):
     help = 'Test payments'
     cur_word = []
     def_list = None
+    add_empty = False
 
     def handle(self, *args, **options):
 
         self.def_list = List.objects.get(id=22)
+        self.add_empty = True
         self.test('dariko_1.txt')
 
     def send_waves(self):
@@ -151,8 +153,16 @@ class Command(BaseCommand):
             logger.debug(spelling)
             sleep(0.5)
 
+            spelling = spelling.strip()
+
             self.cur_word = []
-            self.parse_pos(spelling)
+            res = self.parse_pos(spelling)
+
+            # если слово не нашлось в словаре — добавляю его без заполнения данных
+            if self.add_empty and spelling and not res:
+                word = Word(spelling=spelling, part_of_speech=None)
+                word.save()
+                self.def_list.words.add(word)
 
     def load_yandex_data(self, spelling, pos):
 
