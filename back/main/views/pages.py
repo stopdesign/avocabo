@@ -101,7 +101,7 @@ class ListAPIView(APIView):
     def get(self, request, id, format=None):
         try:
             item = List.objects.get(pk=id)
-            serializer = ListDetailsSerializer(item)
+            serializer = ListDetailsSerializer(item, user=request.user)
             return Response(serializer.data)
         except List.DoesNotExist:
             return Response(status=404)
@@ -110,8 +110,6 @@ class ListAPIView(APIView):
 class ListAPIListView(APIView):
 
     def get(self, request, format=None):
-
-        print('request.user', request.user)
 
         # Если анонимный юзер — показываем все публичные (sharable) темы
         # Если юзер залогинен, то он видит:

@@ -31,8 +31,28 @@ class DefinitionSerializer(ModelSerializer):
 
 class WordSerializer(ModelSerializer):
     # definitions = DefinitionSerializer(many=True, read_only=True)
+    score = SerializerMethodField()
     definitions = SerializerMethodField()
     pronunciation = SerializerMethodField()
+
+    def __init__(self, *args, **kwargs):
+        """
+        Юзер нужен для подсчета количества ответов по данному слову
+        """
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+    def get_score(self, obj):
+        if (self.user is None) or not self.user.is_authenticated:
+            score = 0
+        else:
+            all_res = str(list(Attempt.objects.filter(user_id=self.user.pk, word_id=obj.id).values_list('result', flat=True)))
+            success_cnt = all_res.count("'success'")
+            error_cnt = all_res.count("'error'")
+
+            # TODO: придумать, куда положить скорринг и его правила
+            score = min(9, max(0, success_cnt - error_cnt * 2))
+        return score
 
     def get_pronunciation(self, obj):
         pronunciation = obj.pronunciations.order_by('-description').first()
@@ -58,7 +78,7 @@ class WordSerializer(ModelSerializer):
     class Meta:
         model = Word
         fields = ['id', 'spelling', 'is_hidden', 'definitions', 'pronunciation',
-                  'transcription', 'part_of_speech', 'zipf']
+                  'transcription', 'part_of_speech', 'zipf', 'score']
 
 
 class ListSerializer(ModelSerializer):
@@ -76,9 +96,16 @@ class ListDetailsSerializer(ModelSerializer):
     # words = WordSerializer(many=True, read_only=True)
     words = SerializerMethodField()
 
+    def __init__(self, *args, **kwargs):
+        """
+        Юзер нужен для подсчета количества ответов по данному слову
+        """
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
     def get_words(self, obj):
         qs = obj.words.filter().order_by('spelling')[:50]
-        return WordSerializer(qs, many=True).data
+        return WordSerializer(qs, user=self.user, many=True).data
 
     class Meta:
         model = List
