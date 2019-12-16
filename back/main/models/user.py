@@ -116,7 +116,7 @@ class User(AbstractUser):
         Фиксация момента смены пароля.
         """
         super().set_password(*args, **kwargs)
-        self.password_changed_at = datetime.now().astimezone(utc)
+        self.password_changed_at = datetime.utcnow().replace(tzinfo=utc)
 
     def update_rotation(self):
         """
