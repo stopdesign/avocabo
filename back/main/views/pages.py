@@ -168,8 +168,8 @@ class Test1APIView(APIView):
         print('rotation', rotation)
 
         # статусы, подходящие для этого теста
-        words_to_test = Word.objects.filter(id__in=rotation).exclude(part_of_speech='phrasal_verb').order_by('?')
-        all_words = Word.objects.all().exclude(part_of_speech='phrasal_verb').order_by('?').values_list('spelling', flat=True)[:300]
+        words_to_test = Word.objects.filter(id__in=rotation).order_by('?')
+        all_words = Word.objects.all().exclude(definitions=None).order_by('?').values_list('spelling', flat=True)[:300]
 
         quizlist = []
 
