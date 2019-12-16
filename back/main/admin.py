@@ -25,7 +25,7 @@ class DefinitionInline(StackedInline):
 
 @admin.register(Word, site=custom_admin_site)
 class WordAdmin(ModelAdmin):
-    list_display = ['spelling', 'part_of_speech', 'zipf', 'is_hidden',
+    list_display = ['spelling', 'part_of_speech', 'zipf',
                     'has_audio', 'has_definition', 'has_example', 'short_mean', 'syn_string']
     list_filter = ['list', 'part_of_speech']
     search_fields = ['spelling', 'short_mean', 'syn_string']

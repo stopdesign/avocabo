@@ -77,7 +77,7 @@ class ListDetailsSerializer(ModelSerializer):
     words = SerializerMethodField()
 
     def get_words(self, obj):
-        qs = obj.words.filter().order_by('spelling')[:10]
+        qs = obj.words.filter().order_by('spelling')[:50]
         return WordSerializer(qs, many=True).data
 
     class Meta:
