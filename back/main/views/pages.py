@@ -280,6 +280,12 @@ Future In Time Clauses	Present Simple'''
             random.shuffle(options)
 
             quizlist.append({
+                'word': {
+                    'definitions': [],
+                    'spelling': '',
+                    'transcription': '',
+                    'pronunciation': '',
+                },
                 'word_id': i,
                 'definition_id': i,
                 'quiz': example,
