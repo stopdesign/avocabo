@@ -218,39 +218,40 @@ class TestTensesAPIView(APIView):
 
     def get(self, request, format=None):
 
-        data = '''Actions In Stories	Past Simple
-Unfinished Actions Now	Present Continuous
-Future Timetables	Present Simple
-Story Background	Past Continuous
-Unreal Things In The Past	Past Perfect
-Finished Time Period	Past Simple
-Details Of News	Past Simple
-Short Actions Now	Present Simple
-How Much Time from Moment (past) to Now	Present Perfect
-Temporary Habits	Present Continuous
-Permanent Situations	Present Simple
-Emphasis Of Length Of Action	Past Continuous
-How Much Time from Moment to A Point In The Past	Past Perfect
-Finished Time Word	Past Simple
-Process Duration To A Point In The Past	Past Perfect Continuous
-Process Duration Till Now	Present Perfect Continuous
-Overlapping Action	Past Continuous
-Result At A Time In The Past	Past Perfect Continuous
-Annoying Habits	Present Continuous
-News / Recent Events	Present Perfect
+        data = '''Actions in stories	Past Simple
+Finished time period	Past Simple
+Details of news	Past Simple
+Action at a precise time before now	Past Simple
+Unreal condition for hypothetical result	Past Simple
+Story background, conditions, environment	Past Continuous
+Emphasis of length of action in the past	Past Continuous
+Process at a precise time before now	Past Continuous
+Overlapping action in the past	Past Continuous
+Past habits, habitual actions	Past Continuous
+Unreal conditions in the past	Past Perfect
+How much time from some moment to a point before now	Past Perfect
+Action finished before another past moment	Past Perfect
+An action lasted for some time and ended before a point in the past	Past Perfect Continuous
+The result of the action appeared at a time in the past	Past Perfect Continuous
+Future timetables	Present Simple
+Short actions now	Present Simple
+Permanent situations	Present Simple
 Habits	Present Simple
-Present Result Of A Process	Present Perfect Continuous
-Life Experience	Present Perfect
-Unfinished Time Word	Present Perfect
-Action Finished Before Another Past Action	Past Perfect
-Temporary Situations (акцент на Now)	Present Continuous
-Definite Future Plans	Present Continuous
-Always Truth	Present Simple
-Temporary Situations (акцент на прошлом)	Present Perfect Continuous
-Present Result Of An Action	Present Perfect
-Some Past Habits	Past Continuous
-Unreal / Imaginary Things	Past Simple
-Future In Time Clauses	Present Simple'''
+Always truth	Present Simple
+Future in time clauses	Present Simple
+Unfinished actions now	Present Continuous
+Temporary habits	Present Continuous
+Annoying habits	Present Continuous
+Temporary situations	Present Continuous
+Definite future plans	Present Continuous
+How much time from a moment in the past	Present Perfect
+News / Recent events	Present Perfect
+Life experience	Present Perfect
+Action at unspecified time before now	Present Perfect
+Present result of an action	Present Perfect
+Something started in the past and has continued up until now	Present Perfect Continuous
+Present result of a process	Present Perfect Continuous
+Temporary situations, emphasis on duration	Present Perfect Continuous'''
 
         data = data.split('\n')
 
