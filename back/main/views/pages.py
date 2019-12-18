@@ -214,6 +214,89 @@ class Test1APIView(APIView):
             content_type='application/json; charset=utf-8')
 
 
+class TestTensesAPIView(APIView):
+
+    def get(self, request, format=None):
+
+        data = '''Actions In Stories	Past Simple
+Unfinished Actions Now	Present Continuous
+Future Timetables	Present Simple
+Story Background	Past Continuous
+Unreal Things In The Past	Past Perfect
+Finished Time Period	Past Simple
+Details Of News	Past Simple
+Short Actions Now	Present Simple
+How Much Time from Moment (past) to Now	Present Perfect
+Temporary Habits	Present Continuous
+Permanent Situations	Present Simple
+Emphasis Of Length Of Action	Past Continuous
+How Much Time from Moment to A Point In The Past	Past Perfect
+Finished Time Word	Past Simple
+Process Duration To A Point In The Past	Past Perfect Continuous
+Process Duration Till Now	Present Perfect Continuous
+Overlapping Action	Past Continuous
+Result At A Time In The Past	Past Perfect Continuous
+Annoying Habits	Present Continuous
+News / Recent Events	Present Perfect
+Habits	Present Simple
+Present Result Of A Process	Present Perfect Continuous
+Life Experience	Present Perfect
+Unfinished Time Word	Present Perfect
+Action Finished Before Another Past Action	Past Perfect
+Temporary Situations (акцент на Now)	Present Continuous
+Definite Future Plans	Present Continuous
+Always Truth	Present Simple
+Temporary Situations (акцент на прошлом)	Present Perfect Continuous
+Present Result Of An Action	Present Perfect
+Some Past Habits	Past Continuous
+Unreal / Imaginary Things	Past Simple
+Future In Time Clauses	Present Simple'''
+
+        data = data.split('\n')
+
+        quizlist = []
+
+        tenses = [
+            'Past Simple',
+            'Past Continuous',
+            'Past Perfect',
+            'Past Perfect Continuous',
+            'Present Simple',
+            'Present Continuous',
+            'Present Perfect',
+            'Present Perfect Continuous',
+        ]
+
+        random.shuffle(data)
+
+        for i, line in enumerate(data):
+            example, tense = line.split('\t')
+
+            options = list(set(tenses))
+            options.remove(tense)
+
+            options = random.sample(options, 4)
+            options.append(tense)
+            random.shuffle(options)
+
+            quizlist.append({
+                'word_id': i,
+                'definition_id': i,
+                'quiz': example,
+                'options': options,
+                'answer': 4,
+            })
+
+        data = {
+            'results': quizlist,
+        }
+
+        return HttpResponse(
+            json.dumps(data, ensure_ascii=False),
+            status=200,
+            content_type='application/json; charset=utf-8')
+
+
 class Test2APIView(APIView):
 
     def get(self, request, id, format=None):
