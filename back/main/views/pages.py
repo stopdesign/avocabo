@@ -282,7 +282,7 @@ Future In Time Clauses	Present Simple'''
             quizlist.append({
                 'word': {
                     'definitions': [],
-                    'spelling': '',
+                    'spelling': example,
                     'transcription': '',
                     'pronunciation': '',
                 },
@@ -290,7 +290,7 @@ Future In Time Clauses	Present Simple'''
                 'definition_id': i,
                 'quiz': example,
                 'options': options,
-                'answer': 4,
+                'answer': options.index(tense),
             })
 
         data = {
