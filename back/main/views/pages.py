@@ -221,18 +221,18 @@ class TestTensesAPIView(APIView):
         data = '''Actions in stories	Past Simple
 Finished time period	Past Simple
 Details of news	Past Simple
-Action at a precise time before now	Past Simple
+An action at a precise time before now	Past Simple
 Unreal condition for hypothetical result	Past Simple
-Story background, conditions, environment	Past Continuous
+Story background, conditions	Past Continuous
 Emphasis of length of action in the past	Past Continuous
 Process at a precise time before now	Past Continuous
 Overlapping action in the past	Past Continuous
-Past habits, habitual actions	Past Continuous
+Past habits or regular actions	Past Continuous
 Unreal conditions in the past	Past Perfect
 How much time from some moment to a point before now	Past Perfect
-Action finished before another past moment	Past Perfect
+An action finished before another past moment	Past Perfect
 An action lasted for some time and ended before a point in the past	Past Perfect Continuous
-The result of the action appeared at a time in the past	Past Perfect Continuous
+The result of the process appeared at a time in the past	Past Perfect Continuous
 Future timetables	Present Simple
 Short actions now	Present Simple
 Permanent situations	Present Simple
@@ -247,7 +247,7 @@ Definite future plans	Present Continuous
 How much time from a moment in the past	Present Perfect
 News / Recent events	Present Perfect
 Life experience	Present Perfect
-Action at unspecified time before now	Present Perfect
+An action at unspecified time before now	Present Perfect
 Present result of an action	Present Perfect
 Something started in the past and has continued up until now	Present Perfect Continuous
 Present result of a process	Present Perfect Continuous
