@@ -35,8 +35,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         self.def_list = List.objects.get(id=22)
-        self.add_empty = True
-        self.test('dariko_1.txt')
+        self.add_empty = False
+        self.test('6K.txt')
 
     def send_waves(self):
         pass
@@ -232,7 +232,7 @@ class Command(BaseCommand):
         try:
             word_bs = soup.find('div', {'class': 'h2 tw-bw dhw dpos-h_hw di-title'}).get_text(strip=True)
             try:
-                pos_bs = soup.select('span.posgram > span.pos')[0].get_text(strip=True)
+                pos_bs = soup.select('.posgram > span.pos')[0].get_text(strip=True)
             except IndexError:
                 logger.warning('Word "%s" is not a word, %s' % (url_spelling, r.url))
         except AttributeError:
@@ -243,28 +243,20 @@ class Command(BaseCommand):
         if abs(len(url_spelling) - len(spelling)) > 3:
             logger.warning('Not exactly: "%s" != "%s"' % (url_spelling, spelling))
 
-        # что это за хуйня?
-        # ссылка на другую статью?
-        for el in soup.select('.grad-trans-pseudo li'):
-            linked_word = el.select('b')[0].get_text(strip=True, separator=' ')
-            linked_word_pos = None
-            s = el.select('.pos')
-            if s:
-                linked_word_pos = s[0].get_text(strip=True, separator=' ')
-            else:
-                linked_word_pos = 'phrase'
-                # logger.warning('phrase?')
-                # print(el)
-                # print()
-            link = el.find('a')
-            if word_bs == linked_word and link:
-                # logger.warning(linked_word)
-                # logger.debug(linked_word_pos)
-                new_url = link['href'].split('/')[-1]
-                # logger.debug(new_url)
-                # print()
-                if new_url not in self.cur_word:
-                    self.parse_pos(new_url)
+        # ссылки на другие результаты поиска
+        for el in soup.select('.moreResult'):
+            # если это нормальная часть речи, то можно парсить
+            if el.select('.haf') and el.select('.pos'):
+                linked_word = el.select('.haf')[0].get_text(strip=True, separator=' ')
+                linked_word_pos = el.select('.pos')[0].get_text(strip=True, separator=' ')
+                if word_bs == linked_word:
+                    logger.warning(linked_word)
+                    logger.debug(linked_word_pos)
+                    new_url = el['href'].split('/')[-1]
+                    logger.debug(new_url)
+                    print()
+                    if new_url not in self.cur_word:
+                        self.parse_pos(new_url)
 
         entry_body = soup.find('div', {'class': 'normal-entry-body'})
 
@@ -303,6 +295,10 @@ class Command(BaseCommand):
         means, syns = self.load_yandex_data(spelling, pos)
         means_str = ('; '.join(means)).strip().strip(';')
         syns_str = ('; '.join(syns)).strip().strip(';')
+
+        if pos == 'noun':
+            logger.debug('Skip Noun')
+            return True
 
         # добавляю слово в список
         word = Word(
