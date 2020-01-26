@@ -3,6 +3,7 @@ import logging
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
 from django.db import models, transaction
 from django.db.models import CASCADE, SET_NULL, PROTECT, Max, Avg
 from django.utils.timezone import utc
@@ -14,6 +15,40 @@ from project.helpers.choice_enum import ChoiceEnum
 logger = logging.getLogger(__name__)
 
 User = get_user_model()
+
+
+class RotationList:
+    id = 0
+    name = 'Rotation'
+    request = None
+
+    def __init__(self, request):
+        self.request = request
+
+    @property
+    def words(self):
+        request = self.request
+
+        if request.user.is_authenticated:
+            user = User.objects.get(id=request.user.pk)
+            user.update_rotation()
+            rotation = user.rotation
+        else:
+            user = AnonymousUser()
+            rotation = '2488 2490 2270 2543 2612 1369 2322 1681 1986 1626'  # 2638  2496  2358  1428
+
+        rotation = rotation.strip().split(' ')
+        rotation = filter(None, rotation)
+        rotation = [int(r) for r in rotation]
+
+        print('request', request)
+        print('request.user', request.user)
+        print('rotation', rotation)
+
+        # статусы, подходящие для этого теста
+        words_to_test = Word.objects.filter(id__in=rotation).order_by('?')
+
+        return words_to_test
 
 
 class List(models.Model):

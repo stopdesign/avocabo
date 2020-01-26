@@ -11,6 +11,8 @@ from django.db.models import F, Count, Q
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from main.models.words import RotationList
 from main.serializers import ListSerializer, ListDetailsSerializer, WordSerializer, AttemptSerializer
 from main.models import List, Word, Attempt, Sentence, User
 import json
@@ -97,10 +99,16 @@ def words(request, list_id):
 
 
 class ListAPIView(APIView):
-
+    """
+    Возвращает слова списка.
+    Для списка с id = 0 нужно возвращать слова ротации.
+    """
     def get(self, request, id, format=None):
         try:
-            item = List.objects.get(pk=id)
+            if id == '0':
+                item = RotationList(request=request)
+            else:
+                item = List.objects.get(pk=id)
             serializer = ListDetailsSerializer(item, user=request.user)
             return Response(serializer.data)
         except List.DoesNotExist:
@@ -148,25 +156,10 @@ class Test1APIView(APIView):
 
     def get(self, request, id, format=None):
 
-        if request.user.is_authenticated:
-            user = User.objects.get(id=request.user.pk)
-            user.update_rotation()
-            rotation = user.rotation
-        else:
-            user = AnonymousUser()
-            rotation = '2488 2490 2270 2543 2612 1369 2322 1681 1986 1626'  # 2638  2496  2358  1428
+        # тест всегда по RotationList, даже если указан id списка
+        rl = RotationList(request)
+        words_to_test = rl.words
 
-        rotation = rotation.strip().split(' ')
-        rotation = filter(None, rotation)
-        rotation = [int(r) for r in rotation]
-
-        print('request', request)
-
-        print('request.user', request.user)
-        print('rotation', rotation)
-
-        # статусы, подходящие для этого теста
-        words_to_test = Word.objects.filter(id__in=rotation).order_by('?')
         all_words = Word.objects.all().exclude(definitions=None).order_by('?').values_list('spelling', flat=True)[:300]
 
         quizlist = []
@@ -208,10 +201,7 @@ class Test1APIView(APIView):
             'results': quizlist,
         }
 
-        return HttpResponse(
-            json.dumps(data, ensure_ascii=False),
-            status=200,
-            content_type='application/json; charset=utf-8')
+        return Response(data)
 
 
 class TestTensesAPIView(APIView):
@@ -298,10 +288,7 @@ Temporary situations, emphasis on duration	Present Perfect Continuous'''
             'results': quizlist,
         }
 
-        return HttpResponse(
-            json.dumps(data, ensure_ascii=False),
-            status=200,
-            content_type='application/json; charset=utf-8')
+        return Response(data)
 
 
 class Test2APIView(APIView):

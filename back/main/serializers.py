@@ -89,7 +89,7 @@ class ListSerializer(ModelSerializer):
 
     class Meta:
         model = List
-        fields = ['id', 'name', 'count']  #, 'stat']
+        fields = ['id', 'name', 'count']  # , 'stat']
 
 
 class ListDetailsSerializer(ModelSerializer):
@@ -104,7 +104,7 @@ class ListDetailsSerializer(ModelSerializer):
         super().__init__(*args, **kwargs)
 
     def get_words(self, obj):
-        qs = obj.words.filter().order_by('spelling')[:50]
+        qs = obj.words.filter()[:50]
         return WordSerializer(qs, user=self.user, many=True).data
 
     class Meta:
