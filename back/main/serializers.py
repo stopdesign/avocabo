@@ -95,11 +95,13 @@ class ListSerializer(ModelSerializer):
         return obj.words.count()
 
     def get_hidden(self, obj):
-        try:
-            ul = UserList.objects.get(user=self.user, list=obj)
-            return ul.hidden
-        except UserList.DoesNotExist:
-            return None
+        if self.user and self.user.is_authenticated:
+            try:
+                ul = UserList.objects.get(user=self.user, list=obj)
+                return ul.hidden
+            except UserList.DoesNotExist:
+                pass
+        return False
 
     class Meta:
         model = List
