@@ -1,6 +1,8 @@
 import logging
+
+from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
-from main.models import List, Word, Definition, Example, Pronunciation, Attempt
+from main.models import List, Word, Definition, Example, Pronunciation, Attempt, UserList
 
 
 logger = logging.getLogger(__name__)
@@ -83,13 +85,34 @@ class WordSerializer(ModelSerializer):
 
 class ListSerializer(ModelSerializer):
     count = SerializerMethodField()
+    hidden = SerializerMethodField()
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user')
+        super().__init__(*args, **kwargs)
 
     def get_count(self, obj):
         return obj.words.count()
 
+    def get_hidden(self, obj):
+        try:
+            ul = UserList.objects.get(user=self.user, list=obj)
+            return ul.hidden
+        except UserList.DoesNotExist:
+            return None
+
     class Meta:
         model = List
-        fields = ['id', 'name', 'count']  # , 'stat']
+        fields = ['id', 'name', 'count', 'hidden']
+
+
+class UserListSerializer(ModelSerializer):
+    user = PrimaryKeyRelatedField(read_only=True)
+    list = PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = UserList
+        fields = ['user', 'list', 'hidden']
 
 
 class ListDetailsSerializer(ModelSerializer):

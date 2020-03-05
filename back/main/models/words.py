@@ -41,11 +41,6 @@ class RotationList:
         rotation = filter(None, rotation)
         rotation = [int(r) for r in rotation]
 
-        print('request', request)
-        print('request.user', request.user)
-        print('rotation', rotation)
-
-        # статусы, подходящие для этого теста
         words_to_test = Word.objects.filter(id__in=rotation).order_by('?')
 
         return words_to_test
@@ -115,6 +110,22 @@ class List(models.Model):
 
     class Meta:
         ordering = ['-id']
+
+
+class UserList(models.Model):
+    user = models.ForeignKey('User', related_name='user_lists', on_delete=models.SET_NULL, null=True, blank=True)
+    list = models.ForeignKey('List', related_name='user_lists', on_delete=models.SET_NULL, null=True, blank=True)
+
+    hidden = models.BooleanField(default=False)
+
+
+class UserWord(models.Model):
+    user = models.ForeignKey('User', related_name='user_words', on_delete=models.SET_NULL, null=True, blank=True)
+    word = models.ForeignKey('Word', related_name='user_words', on_delete=models.SET_NULL, null=True, blank=True)
+
+    score = models.IntegerField(default=0)
+    hidden = models.BooleanField(default=False)
+    marked = models.BooleanField(default=False)
 
 
 class Word(models.Model):

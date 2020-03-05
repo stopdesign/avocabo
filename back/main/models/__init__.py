@@ -1,5 +1,5 @@
 from .user import User, UserModelManager
-from .words import List, Word, Example, Pronunciation, Definition, Sentence, Attempt
+from .words import List, Word, Example, Pronunciation, Definition, Sentence, Attempt, UserList, UserWord
 
 __all__ = [
     'User',
@@ -11,4 +11,6 @@ __all__ = [
     'Definition',
     'Sentence',
     'Attempt',
+    'UserList',
+    'UserWord',
 ]

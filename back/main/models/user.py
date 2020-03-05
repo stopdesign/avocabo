@@ -130,7 +130,6 @@ class User(AbstractUser):
         Обновляет список слов в ротации.
         Из списка удаляются изученные слова, в список добавляются
         """
-        pass
 
         """
         1. Разобрать строку ротации на список.
@@ -153,8 +152,11 @@ class User(AbstractUser):
 
         new_r_words = []
 
+        # выключенные листы
+        hidden_lists = self.user_lists.filter(hidden=True).values_list('list_id', flat=True)
+
         # id активных подписок пользователя
-        list_ids = self.user_subscriptions.values_list('id', flat=True)
+        list_ids = self.user_subscriptions.exclude(id__in=hidden_lists).values_list('id', flat=True)
 
         # фильтр по активным группам пользователя
         words = Word.objects.filter(list__in=list_ids, id__in=rotation).exclude(definitions=None).values_list('id', flat=True)
@@ -167,14 +169,14 @@ class User(AbstractUser):
 
         # группировать по id
 
-        print('\n')
-        print(attempts)
+        # print('\n')
+        # print(attempts)
 
         attempts_by_word_id = {}
         for attempt in attempts:
             attempts_by_word_id.setdefault(attempt['word'], []).append(attempt)
 
-        print('attempts_by_word_id', attempts_by_word_id)
+        # print('attempts_by_word_id', attempts_by_word_id)
 
         # Пересечение список с сохранением порядка первого списка.
         # Это слова, которые сейчас есть в ротации и существуют в подписках
@@ -192,8 +194,8 @@ class User(AbstractUser):
             if score < 5:
                 new_r_words.append(r_word)
 
-        print('words_count', words_count)
-        print('new_r_words 1', new_r_words)
+        # print('words_count', words_count)
+        # print('new_r_words 1', new_r_words)
 
         new_r_words = new_r_words[:self.rotation_count]
 
@@ -201,7 +203,7 @@ class User(AbstractUser):
         to_add = self.rotation_count - len(new_r_words)
         to_add = min(to_add, words_count)
 
-        print('to_add', to_add)
+        # print('to_add', to_add)
 
         if to_add > 0:
             print('нужно добавить', to_add)
@@ -211,7 +213,7 @@ class User(AbstractUser):
             words = Word.objects.filter(list__in=list_ids).exclude(definitions=None).exclude(id__in=new_r_words)
             words = words.values_list('id', flat=True).order_by('?')
 
-            print('words_2 ===', len(words))
+            # print('words_2 ===', len(words))
 
             # выбрать все попытки по словам из ротации
             attempts = list(Attempt.objects.filter(user_id=self.pk, word_id__in=words).values('user', 'word', 'result'))
@@ -237,10 +239,10 @@ class User(AbstractUser):
 
         words_dump = ' '.join(['%s' % w for w in new_r_words])
 
-        print('\nnew_r_word_2', len(new_r_words), words_dump)
+        # print('\nnew_r_word_2', len(new_r_words), words_dump)
 
-        print()
-        print()
+        # print()
+        # print()
 
         if self.rotation != words_dump and self.pk:
             self.rotation = words_dump

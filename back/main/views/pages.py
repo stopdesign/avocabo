@@ -8,13 +8,15 @@ from collections import Counter
 from django.contrib.auth.models import AnonymousUser
 from django.template.response import TemplateResponse
 from django.db.models import F, Count, Q
+from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from main.models.words import RotationList
-from main.serializers import ListSerializer, ListDetailsSerializer, WordSerializer, AttemptSerializer
-from main.models import List, Word, Attempt, Sentence, User
+from main.serializers import ListSerializer, ListDetailsSerializer, WordSerializer, AttemptSerializer, \
+    UserListSerializer
+from main.models import List, Word, Attempt, Sentence, User, UserList, UserWord
 import json
 import logging
 from django.http import HttpResponse, Http404
@@ -23,8 +25,9 @@ logger = logging.getLogger(__name__)
 
 
 SOME_PREPS = [
-    'of', 'with', 'at', 'from', 'into', 'to', 'in', 'for', 'on', 'by', 'about', 'like', 'up', 'after', 'over', 'before',
-    'since', 'under', 'through', 'within', 'across', 'behind', 'beyond', 'out', 'around', 'down', 'off', 'above'
+    'in', 'by', 'with', 'of', 'to', 'for', 'at', 'about', 'on',
+    # 'of', 'with', 'at', 'from', 'into', 'to', 'in', 'for', 'on', 'by', 'about', 'like', 'up', 'after', 'over', 'before',
+    # 'since', 'under', 'through', 'within', 'across', 'behind', 'beyond', 'out', 'around', 'down', 'off', 'above'
 ]
 
 
@@ -115,6 +118,46 @@ class ListAPIView(APIView):
             return Response(status=404)
 
 
+class UserListAPIView(GenericAPIView):
+    """
+    Связь юзера со списком тем.
+    Юзер может скрывать темы.
+    """
+    serializer_class = UserListSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = UserList.objects.all()
+        qs_filter = {
+            'user': user,
+        }
+        qs = queryset.filter(**qs_filter)
+        return qs
+
+    def post(self, request, format=None):
+        list_id = request.data['list_id']
+        try:
+            instance = self.get_queryset().get(list_id=list_id)
+        except UserList.DoesNotExist:
+            instance = UserList(**{
+                'user': request.user,
+                'list': List.objects.get(pk=list_id),
+            })
+            instance.save()
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        if request.user.is_authenticated:
+            user = User.objects.get(id=request.user.pk)
+            user.update_rotation()
+            user_rotation = user.rotation
+
+            print('user_rotation', user_rotation)
+
+        return Response(serializer.data)
+
+
 class ListAPIListView(APIView):
 
     def get(self, request, format=None):
@@ -129,15 +172,15 @@ class ListAPIListView(APIView):
             subscriptions = request.user.user_subscriptions.values_list('id', flat=True)
             items = List.objects.filter(id__in=subscriptions)
 
-            print('subscriptions', subscriptions)
-            print('public', List.objects.filter(sharable=True).values_list('id', flat=True))
-            print('count', items.count(), '/', List.objects.count())
+            # print('subscriptions', subscriptions)
+            # print('public', List.objects.filter(sharable=True).values_list('id', flat=True))
+            # print('count', items.count(), '/', List.objects.count())
         else:
             items = List.objects.filter(sharable=True)
 
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(items, request)
-        serializer = ListSerializer(result_page, many=True)
+        serializer = ListSerializer(result_page, many=True, user=request.user)
         return paginator.get_paginated_response(serializer.data)
 
 
