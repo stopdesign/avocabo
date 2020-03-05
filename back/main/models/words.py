@@ -274,10 +274,10 @@ class Attempt(models.Model):
 
     user = models.ForeignKey(User, related_name='attempts', on_delete=CASCADE, null=True)
 
-    word = models.ForeignKey('Word', related_name='attempt', on_delete=CASCADE, null=True)
-    definition = models.ForeignKey('Definition', related_name='attempt', on_delete=CASCADE, null=True)
+    word = models.ForeignKey('Word', related_name='attempts', on_delete=CASCADE, null=True)
+    definition = models.ForeignKey('Definition', related_name='attempts', on_delete=CASCADE, null=True)
 
-    sentence = models.ForeignKey('Sentence', related_name='attempt', on_delete=CASCADE, null=True)
+    sentence = models.ForeignKey('Sentence', related_name='attempts', on_delete=CASCADE, null=True)
     index = models.IntegerField(default=0)
     answer = models.CharField(max_length=100, null=True)
 

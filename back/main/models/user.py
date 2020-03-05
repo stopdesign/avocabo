@@ -2,7 +2,7 @@ import uuid
 import hashlib
 import logging
 from datetime import datetime
-from django.db.models import Q
+from django.db.models import Q, Count
 from pytz import utc
 from django.db import models
 from django.conf import settings
@@ -206,12 +206,14 @@ class User(AbstractUser):
         # print('to_add', to_add)
 
         if to_add > 0:
-            print('нужно добавить', to_add)
+            # print('нужно добавить', to_add)
 
             # TODO: тут важно сначала обработать слова, которые уже когда-то были в ротации, но еще не доделаны
             # TODO: и не находятся в ротации сейчас
+            # TODO: Для этого нужно положить score в user_word
             words = Word.objects.filter(list__in=list_ids).exclude(definitions=None).exclude(id__in=new_r_words)
-            words = words.values_list('id', flat=True).order_by('?')
+            words = words.annotate(attempts_cnt=Count('attempts')).order_by('-attempts_cnt')
+            words = words.values_list('id', flat=True)
 
             # print('words_2 ===', len(words))
 

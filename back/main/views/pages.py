@@ -19,7 +19,7 @@ from main.serializers import ListSerializer, ListDetailsSerializer, WordSerializ
 from main.models import List, Word, Attempt, Sentence, User, UserList, UserWord
 import json
 import logging
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, HttpResponseForbidden
 
 logger = logging.getLogger(__name__)
 
@@ -136,6 +136,10 @@ class UserListAPIView(GenericAPIView):
 
     def post(self, request, format=None):
         list_id = request.data['list_id']
+
+        if not request.user.is_authenticated:
+            return HttpResponseForbidden()
+
         try:
             instance = self.get_queryset().get(list_id=list_id)
         except UserList.DoesNotExist:
