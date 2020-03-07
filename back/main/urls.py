@@ -17,6 +17,8 @@ urlpatterns = [
 
     url(r'^api/test_tenses/$', pages.TestTensesAPIView.as_view()),
 
+    url(r'^api/stat/$', pages.StatAPIView.as_view()),
+
     # url(r'^api/rotation/$', pages.RotationAPIListView.as_view()),
 
     url(r'^api/sentence/$', pages.sentence_task),

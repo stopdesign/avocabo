@@ -1,6 +1,6 @@
 import random
 import re
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from time import sleep
 import jellyfish
 from collections import Counter
@@ -8,6 +8,7 @@ from collections import Counter
 from django.contrib.auth.models import AnonymousUser
 from django.template.response import TemplateResponse
 from django.db.models import F, Count, Q
+from django.utils.timezone import utc
 from rest_framework.generics import GenericAPIView, get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -20,6 +21,8 @@ from main.models import List, Word, Attempt, Sentence, User, UserList, UserWord
 import json
 import logging
 from django.http import HttpResponse, Http404, HttpResponseForbidden
+
+from project.helpers.stuff import daterange
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +119,32 @@ class ListAPIView(APIView):
             return Response(serializer.data)
         except List.DoesNotExist:
             return Response(status=404)
+
+
+class StatAPIView(APIView):
+
+    def get(self, request, format=None):
+
+        today = datetime.today().astimezone(utc)
+
+        start_date = today - timedelta(days=14)
+        end_date = today + timedelta(days=2)  # запас на всякие там часовые пояса
+
+        data = []
+
+        # start_date = (datetime(2019, 9, 30) - timedelta(days=14)).astimezone(utc)
+        counts = Attempt.objects.filter(created_at__gte=start_date, user=request.user)
+        counts = counts.extra({'dt': 'date(created_at)'}).values_list('dt').order_by('dt').annotate(cnt=Count('id'))
+        counts = dict(counts)
+
+        for single_date in daterange(start_date, end_date):
+            dt = single_date.strftime('%Y-%m-%d')
+            data.append({
+                'count': counts.get(dt, 0),
+                'date': dt,
+            })
+
+        return Response(data)
 
 
 class UserListAPIView(GenericAPIView):
