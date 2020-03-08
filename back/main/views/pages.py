@@ -16,7 +16,7 @@ from rest_framework.views import APIView
 
 from main.models.words import RotationList
 from main.serializers import ListSerializer, ListDetailsSerializer, WordSerializer, AttemptSerializer, \
-    UserListSerializer
+    UserListSerializer, UserWordSerializer
 from main.models import List, Word, Attempt, Sentence, User, UserList, UserWord
 import json
 import logging
@@ -187,6 +187,48 @@ class UserListAPIView(GenericAPIView):
             user_rotation = user.rotation
 
             print('user_rotation', user_rotation)
+
+        return Response(serializer.data)
+
+
+class HideWordAPIView(GenericAPIView):
+    """
+    Сокрытие слова от юзера.
+    """
+    serializer_class = UserWordSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = UserWord.objects.all()
+        qs_filter = {
+            'user': user,
+        }
+        qs = queryset.filter(**qs_filter)
+        return qs
+
+    def post(self, request, format=None):
+        word_id = request.data['word_id']
+
+        if not request.user.is_authenticated:
+            return HttpResponseForbidden()
+
+        try:
+            instance = self.get_queryset().get(word_id=word_id)
+        except UserWord.DoesNotExist:
+            instance = UserWord(**{
+                'user': request.user,
+                'word': Word.objects.get(pk=word_id),
+            })
+            instance.save()
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        # попытка как-то попроще обновить ротацию (удалить только это слово)
+        if request.user.is_authenticated:
+            user = User.objects.get(id=request.user.pk)
+            user.rotation = (' %s ' % user.rotation).replace('%s ' % word_id, ' ').strip()
+            user.save()
 
         return Response(serializer.data)
 

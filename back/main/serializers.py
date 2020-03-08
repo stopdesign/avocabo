@@ -2,8 +2,7 @@ import logging
 
 from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
-from main.models import List, Word, Definition, Example, Pronunciation, Attempt, UserList
-
+from main.models import List, Word, Definition, Example, Pronunciation, Attempt, UserList, UserWord
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +116,15 @@ class UserListSerializer(ModelSerializer):
         fields = ['user', 'list', 'hidden']
 
 
+class UserWordSerializer(ModelSerializer):
+    user = PrimaryKeyRelatedField(read_only=True)
+    word = PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = UserList
+        fields = ['user', 'word', 'hidden']
+
+
 class ListDetailsSerializer(ModelSerializer):
     # words = WordSerializer(many=True, read_only=True)
     words = SerializerMethodField()
@@ -129,8 +137,15 @@ class ListDetailsSerializer(ModelSerializer):
         super().__init__(*args, **kwargs)
 
     def get_words(self, obj):
-        qs = obj.words.filter()[:200]
-        return WordSerializer(qs, user=self.user, many=True).data
+        qs = obj.words.filter()
+
+        # отфильтровать те, которые выключены
+        if self.user and self.user.is_authenticated:
+            # все слова данного списка, которые выключены у юзера
+            hidden_word_ids = UserWord.objects.filter(user=self.user).values('word_id')
+            qs = qs.exclude(id__in=hidden_word_ids)
+
+        return WordSerializer(qs[:200], user=self.user, many=True).data
 
     class Meta:
         model = List

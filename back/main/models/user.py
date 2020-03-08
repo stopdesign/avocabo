@@ -144,7 +144,7 @@ class User(AbstractUser):
         
         5. Сдампить и сохранить новую ротацию.
         """
-        from main.models import Word, Attempt
+        from main.models import Word, Attempt, UserWord
 
         rotation = self.rotation.strip().split(' ')
         rotation = filter(None, rotation)
@@ -158,11 +158,17 @@ class User(AbstractUser):
         # id активных подписок пользователя
         list_ids = self.user_subscriptions.exclude(id__in=hidden_lists).values_list('id', flat=True)
 
+        # все слова которые выключены у юзера
+        hidden_word_ids = UserWord.objects.filter(user_id=self.pk).values('word_id')
+
         # фильтр по активным группам пользователя
-        words = Word.objects.filter(list__in=list_ids, id__in=rotation).exclude(definitions=None).values_list('id', flat=True)
+        words = Word.objects.filter(list__in=list_ids, id__in=rotation)
+        words = words.exclude(definitions=None)
+        words = words.exclude(id__in=hidden_word_ids)
+        words = words.values_list('id', flat=True)
 
         # все слова, которые потенциально можно добавить
-        words_count = Word.objects.filter(list__in=list_ids).exclude(definitions=None).count()
+        words_count = Word.objects.filter(list__in=list_ids).exclude(definitions=None).exclude(id__in=hidden_word_ids).count()
 
         # выбрать все попытки по словам из ротации
         attempts = list(Attempt.objects.filter(user_id=self.pk, word_id__in=words).values('user', 'word', 'result'))
@@ -211,7 +217,10 @@ class User(AbstractUser):
             # TODO: тут важно сначала обработать слова, которые уже когда-то были в ротации, но еще не доделаны
             # TODO: и не находятся в ротации сейчас
             # TODO: Для этого нужно положить score в user_word
-            words = Word.objects.filter(list__in=list_ids).exclude(definitions=None).exclude(id__in=new_r_words)
+            words = Word.objects.filter(list__in=list_ids)
+            words = words.exclude(definitions=None)
+            words = words.exclude(id__in=new_r_words)
+            words = words.exclude(id__in=hidden_word_ids)
             words = words.annotate(attempts_cnt=Count('attempts')).order_by('-attempts_cnt')
             words = words.values_list('id', flat=True)
 

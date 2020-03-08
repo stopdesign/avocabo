@@ -11,6 +11,8 @@ urlpatterns = [
 
     url(r'^api/user_list/$', pages.UserListAPIView.as_view()),
 
+    url(r'^api/hide_word/$', pages.HideWordAPIView.as_view()),
+
     url(r'^api/list/(?P<id>[0-9]+)/$', pages.ListAPIView.as_view()),
     url(r'^api/list/(?P<id>[0-9]+)/test1/$', pages.Test1APIView.as_view()),
     url(r'^api/list/(?P<id>[0-9]+)/test_phrasal/$', pages.TestPhrasalAPIView.as_view()),
