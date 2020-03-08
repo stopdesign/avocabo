@@ -129,7 +129,7 @@ class ListDetailsSerializer(ModelSerializer):
         super().__init__(*args, **kwargs)
 
     def get_words(self, obj):
-        qs = obj.words.filter()[:50]
+        qs = obj.words.filter()[:200]
         return WordSerializer(qs, user=self.user, many=True).data
 
     class Meta:

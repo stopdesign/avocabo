@@ -125,7 +125,7 @@ class StatAPIView(APIView):
 
     def get(self, request, format=None):
 
-        today = datetime.today().astimezone(utc)
+        today = datetime.today()
 
         start_date = today - timedelta(days=14)
         end_date = today + timedelta(days=2)  # запас на всякие там часовые пояса
