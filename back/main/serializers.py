@@ -1,5 +1,6 @@
 import logging
 
+from django.db.models import Count
 from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
 from main.models import List, Word, Definition, Example, Pronunciation, Attempt, UserList, UserWord
@@ -85,12 +86,17 @@ class WordSerializer(ModelSerializer):
 class ListSerializer(ModelSerializer):
     count = SerializerMethodField()
     hidden = SerializerMethodField()
+    new_count = SerializerMethodField()
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
         super().__init__(*args, **kwargs)
 
     def get_count(self, obj):
+        if self.user and self.user.is_authenticated:
+            hidden_word_ids = UserWord.objects.filter(user_id=self.user.pk, word__list=obj).values('word_id')
+            cnt = Word.objects.filter(list=obj).exclude(id__in=hidden_word_ids).count()
+            return cnt
         return obj.words.count()
 
     def get_hidden(self, obj):
@@ -102,9 +108,20 @@ class ListSerializer(ModelSerializer):
                 pass
         return False
 
+    def get_new_count(self, obj):
+        if self.user and self.user.is_authenticated:
+            hidden_word_ids = UserWord.objects.filter(user_id=self.user.pk, word__list=obj).values('word_id')
+
+            new = Word.objects.filter(list=obj)
+            new = new.exclude(id__in=hidden_word_ids)
+            new = new.annotate(attempts_cnt=Count('attempts'))
+            new_cnt = new.filter(attempts_cnt=0).count()
+            return new_cnt
+        return None
+
     class Meta:
         model = List
-        fields = ['id', 'name', 'count', 'hidden']
+        fields = ['id', 'name', 'count', 'new_count', 'hidden']
 
 
 class UserListSerializer(ModelSerializer):
