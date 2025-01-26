@@ -6,40 +6,75 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('main', '0005_auto_20191212_1635'),
+        ("main", "0005_auto_20191212_1635"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='rotation',
-            field=models.TextField(blank=True, default='', max_length=1000),
+            model_name="user",
+            name="rotation",
+            field=models.TextField(blank=True, default="", max_length=1000),
         ),
         migrations.AlterField(
-            model_name='user',
-            name='subscriptions',
-            field=models.ManyToManyField(blank=True, related_name='user_set', to='main.List'),
+            model_name="user",
+            name="subscriptions",
+            field=models.ManyToManyField(blank=True, related_name="user_set", to="main.List"),
         ),
         migrations.CreateModel(
-            name='UserWord',
+            name="UserWord",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('score', models.IntegerField(default=0)),
-                ('hidden', models.BooleanField(default=False)),
-                ('marked', models.BooleanField(default=False)),
-                ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='user_words', to=settings.AUTH_USER_MODEL)),
-                ('word', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='user_words', to='main.Word')),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("score", models.IntegerField(default=0)),
+                ("hidden", models.BooleanField(default=False)),
+                ("marked", models.BooleanField(default=False)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="user_words",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "word",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="user_words",
+                        to="main.Word",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='UserList',
+            name="UserList",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('hidden', models.BooleanField(default=False)),
-                ('list', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='user_lists', to='main.List')),
-                ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='user_lists', to=settings.AUTH_USER_MODEL)),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("hidden", models.BooleanField(default=False)),
+                (
+                    "list",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="user_lists",
+                        to="main.List",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="user_lists",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

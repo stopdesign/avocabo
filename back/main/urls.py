@@ -1,35 +1,25 @@
-from django.conf.urls import url
-from main.views import pages, auth
+from django.urls import path
 
-app_name = 'main'
+from main.views import auth, pages
+
+app_name = "main"
 
 urlpatterns = [
-    url(r'^$', view=pages.index, name='index'),
-    url(r'^list/(?P<list_id>[0-9]+)/$', view=pages.words, name='index'),
-
-    url(r'^api/list/$', pages.ListAPIListView.as_view()),
-
-    url(r'^api/user_list/$', pages.UserListAPIView.as_view()),
-
-    url(r'^api/hide_word/$', pages.HideWordAPIView.as_view()),
-
-    url(r'^api/list/(?P<id>[0-9]+)/$', pages.ListAPIView.as_view()),
-    url(r'^api/list/(?P<id>[0-9]+)/test1/$', pages.Test1APIView.as_view()),
-    url(r'^api/list/(?P<id>[0-9]+)/test_phrasal/$', pages.TestPhrasalAPIView.as_view()),
-
-    url(r'^api/test_tenses/$', pages.TestTensesAPIView.as_view()),
-
-    url(r'^api/stat/$', pages.StatAPIView.as_view()),
-
-    # url(r'^api/rotation/$', pages.RotationAPIListView.as_view()),
-
-    url(r'^api/sentence/$', pages.sentence_task),
-    url(r'^api/sentence_status/$', pages.sentence_status),
-
-    url(r'^api/attempt/$', pages.AttemptAPIView.as_view()),
-
-    url(r'^api/word/(?P<id>[0-9]+)/$', pages.WordAPIView.as_view()),
-
+    path("", pages.index, name="index"),
+    path("list/<int:list_id>/", pages.words, name="index"),
+    path("api/list/", pages.ListAPIListView.as_view()),
+    path("api/user_list/", pages.UserListAPIView.as_view()),
+    path("api/hide_word/", pages.HideWordAPIView.as_view()),
+    path("api/list/<int:id>/", pages.ListAPIView.as_view()),
+    path("api/list/<int:id>/test1/", pages.Test1APIView.as_view()),
+    path("api/list/<int:id>/test_phrasal/", pages.TestPhrasalAPIView.as_view()),
+    path("api/test_tenses/", pages.TestTensesAPIView.as_view()),
+    path("api/stat/", pages.StatAPIView.as_view()),
+    # path('api/rotation/', pages.RotationAPIListView.as_view()),
+    path("api/sentence/", pages.sentence_task),
+    path("api/sentence_status/", pages.sentence_status),
+    path("api/attempt/", pages.AttemptAPIView.as_view()),
+    path("api/word/<int:id>/", pages.WordAPIView.as_view()),
     # auth-test
-    url('^api/auth/test/$', auth.test),
+    path("api/auth/test/", auth.test),
 ]

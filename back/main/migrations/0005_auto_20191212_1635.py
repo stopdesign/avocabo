@@ -4,39 +4,38 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('main', '0004_auto_20191210_1939'),
+        ("main", "0004_auto_20191210_1939"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='sentence',
-            name='error_cnt',
+            model_name="sentence",
+            name="error_cnt",
         ),
         migrations.RemoveField(
-            model_name='sentence',
-            name='status',
+            model_name="sentence",
+            name="status",
         ),
         migrations.RemoveField(
-            model_name='sentence',
-            name='success_cnt',
+            model_name="sentence",
+            name="success_cnt",
         ),
         migrations.RemoveField(
-            model_name='word',
-            name='error_cnt',
+            model_name="word",
+            name="error_cnt",
         ),
         migrations.RemoveField(
-            model_name='word',
-            name='status',
+            model_name="word",
+            name="status",
         ),
         migrations.RemoveField(
-            model_name='word',
-            name='success_cnt',
+            model_name="word",
+            name="success_cnt",
         ),
         migrations.AddField(
-            model_name='user',
-            name='rotation',
-            field=models.TextField(default='', max_length=1000),
+            model_name="user",
+            name="rotation",
+            field=models.TextField(default="", max_length=1000),
         ),
     ]

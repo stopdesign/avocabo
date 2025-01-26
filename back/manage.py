@@ -4,7 +4,6 @@ import sys
 import signal
 
 if __name__ == "__main__":
-
     signal.signal(signal.SIGTERM, lambda n, f: sys.exit(1))
     signal.signal(signal.SIGINT, lambda n, f: sys.exit(1))
 

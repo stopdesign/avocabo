@@ -20,23 +20,23 @@ logger = logging.getLogger(__name__)
 
 
 headers = {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) '
-                  'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
+    )
 }
 
 
 class Command(BaseCommand):
-
-    help = 'Test payments'
+    help = "Test payments"
     cur_word = []
     def_list = None
     add_empty = False
 
     def handle(self, *args, **options):
-
-        self.def_list = List.objects.get(id=22)
+        self.def_list = List.objects.get(id=23)
         self.add_empty = False
-        self.test('6K.txt')
+        self.test("7K.txt")
 
     def send_waves(self):
         pass
@@ -108,16 +108,15 @@ class Command(BaseCommand):
         # https://www.datamuse.com/api/
 
     def download_sound(self, path, pronunciation):
-
         resp = requests.get(path, headers=headers)
         if resp.status_code != requests.codes.ok:
-            raise Exception('sound file downloading error')
+            raise Exception("sound file downloading error")
 
         fp = BytesIO()
         fp.write(resp.content)
 
         # Get the filename from the url, used for saving later
-        file_name = path.split('/')[-1]
+        file_name = path.split("/")[-1]
 
         pronunciation.audio.save(file_name, files.File(fp))
 
@@ -126,21 +125,20 @@ class Command(BaseCommand):
         if match:
             return match.group(1)
         else:
-            return ''
+            return ""
 
     def test(self, filename):
-
-        f = open(filename, 'r')
+        f = open(filename, "r")
 
         # all_text = f.read().decode('string-escape').decode('utf-8')
-        all_text = f.read().strip().replace(u'—', '-')  # [399200:399300]
+        all_text = f.read().strip().replace("—", "-")  # [399200:399300]
 
         words = []
 
-        for word in all_text.replace('\r', ' ').replace('\t', ' ').replace('?', ' ').strip().split('\n'):
-            word = word.strip('''*,"'();:.-!?''').lower()
+        for word in all_text.replace("\r", " ").replace("\t", " ").replace("?", " ").strip().split("\n"):
+            word = word.strip("""*,"'();:.-!?""").lower()
 
-            if len(word) < 3 or any(i.isdigit() or i == '.' for i in word):
+            if len(word) < 3 or any(i.isdigit() or i == "." for i in word):
                 continue
 
             words.append(word)
@@ -148,8 +146,7 @@ class Command(BaseCommand):
         # ua = UserAgent()
 
         for spelling in words[:1000]:
-
-            print('\n')
+            print("\n")
             logger.debug(spelling)
             sleep(0.5)
 
@@ -165,8 +162,7 @@ class Command(BaseCommand):
                 self.def_list.words.add(word)
 
     def load_yandex_data(self, spelling, pos):
-
-        ya_base = 'https://dictionary.yandex.net/api/v1/dicservice.json/lookup?key=%s&lang=en-en&text=%s'
+        ya_base = "https://dictionary.yandex.net/api/v1/dicservice.json/lookup?key=%s&lang=en-en&text=%s"
         url = ya_base % (settings.YANDEX_DICT_API_KEY, spelling)
         r = requests.get(url)
 
@@ -174,7 +170,7 @@ class Command(BaseCommand):
         # print(json.dumps(res, indent=2, ensure_ascii=False))
 
         try:
-            definitions = res['def'][0]['tr']
+            definitions = res["def"][0]["tr"]
         except:
             definitions = []
 
@@ -182,18 +178,18 @@ class Command(BaseCommand):
         syns = []
 
         for definition in definitions:
-            if 'pos' not in definition:
+            if "pos" not in definition:
                 continue
 
-            if definition['pos'] != pos:
+            if definition["pos"] != pos:
                 continue
 
-            text = definition.get('text')
-            syn = definition.get('syn', [])
+            text = definition.get("text")
+            syn = definition.get("syn", [])
 
             for s in syn:
-                if spelling not in s['text']:
-                    syns.append(s['text'])
+                if spelling not in s["text"]:
+                    syns.append(s["text"])
 
             if spelling in text:
                 continue
@@ -203,19 +199,18 @@ class Command(BaseCommand):
         return means[:5], syns[:5]
 
     def parse_pos(self, url_spelling):
-
-        url = 'https://dictionary.cambridge.org/dictionary/english-russian/%s' % url_spelling
+        url = "https://dictionary.cambridge.org/dictionary/english-russian/%s" % url_spelling
 
         r = requests.get(url, headers=headers)
 
         if r.status_code != 200:
             return
 
-        soup = BeautifulSoup(r.text, 'html.parser')
+        soup = BeautifulSoup(r.text, "html.parser")
 
         spelling = self.parse(r.text, r'<div class="h2 tw-bw dhw dpos-h_hw di-title ">([^<]*?)</div>')
         pos = self.parse(r.text, r'><span class="pos dpos"[^>]*?>([^<]*?)</span>')
-        page_id = requests.utils.urlparse(r.url).path.split('/')[-1]
+        page_id = requests.utils.urlparse(r.url).path.split("/")[-1]
 
         # исключение повторной загрузки той же страницы
         if page_id in self.cur_word:
@@ -223,16 +218,16 @@ class Command(BaseCommand):
         self.cur_word.append(page_id)
 
         if spelling:
-            logger.warning('=== %s / %s / %s ===' % (spelling, pos, page_id))
+            logger.warning("=== %s / %s / %s ===" % (spelling, pos, page_id))
         else:
             logger.error('Word "%s" was not found' % url_spelling)
             return False
 
         # поиск слова, о котором эта страница
         try:
-            word_bs = soup.find('div', {'class': 'h2 tw-bw dhw dpos-h_hw di-title'}).get_text(strip=True)
+            word_bs = soup.find("div", {"class": "h2 tw-bw dhw dpos-h_hw di-title"}).get_text(strip=True)
             try:
-                pos_bs = soup.select('.posgram > span.pos')[0].get_text(strip=True)
+                pos_bs = soup.select(".posgram > span.pos")[0].get_text(strip=True)
             except IndexError:
                 logger.warning('Word "%s" is not a word, %s' % (url_spelling, r.url))
         except AttributeError:
@@ -244,47 +239,49 @@ class Command(BaseCommand):
             logger.warning('Not exactly: "%s" != "%s"' % (url_spelling, spelling))
 
         # ссылки на другие результаты поиска
-        for el in soup.select('.moreResult'):
+        for el in soup.select(".moreResult"):
             # если это нормальная часть речи, то можно парсить
-            if el.select('.haf') and el.select('.pos'):
-                linked_word = el.select('.haf')[0].get_text(strip=True, separator=' ')
-                linked_word_pos = el.select('.pos')[0].get_text(strip=True, separator=' ')
+            if el.select(".haf") and el.select(".pos"):
+                linked_word = el.select(".haf")[0].get_text(strip=True, separator=" ")
+                linked_word_pos = el.select(".pos")[0].get_text(strip=True, separator=" ")
                 if word_bs == linked_word:
                     logger.warning(linked_word)
                     logger.debug(linked_word_pos)
-                    new_url = el['href'].split('/')[-1]
+                    new_url = el["href"].split("/")[-1]
                     logger.debug(new_url)
                     print()
                     if new_url not in self.cur_word:
                         self.parse_pos(new_url)
 
-        entry_body = soup.find('div', {'class': 'normal-entry-body'})
+        entry_body = soup.find("div", {"class": "normal-entry-body"})
 
         # не обрабатываются
-        idiom_body = soup.find('div', {'class': 'idiom-body'})
+        idiom_body = soup.find("div", {"class": "idiom-body"})
 
         # произношение
-        pron_info = soup.select('.di-info > .pron-info')
+        pron_info = soup.select(".di-info > .pron-info")
         prons = []
         for el in pron_info:
             try:
-                region = el.select('.region')[0].get_text(strip=True)
+                region = el.select(".region")[0].get_text(strip=True)
             except IndexError:
                 region = None
             if el.select('source[type="audio/mpeg"]'):
-                mp3 = el.select('source[type="audio/mpeg"]')[0]['src']
-                prons.append({
-                    'url': 'https://dictionary.cambridge.org' + mp3,
-                    'region': region,
-                    'source': 'dictionary.cambridge.org',
-                })
+                mp3 = el.select('source[type="audio/mpeg"]')[0]["src"]
+                prons.append(
+                    {
+                        "url": "https://dictionary.cambridge.org" + mp3,
+                        "region": region,
+                        "source": "dictionary.cambridge.org",
+                    }
+                )
 
         # print('prons:', json.dumps(prons, indent=2))
 
         try:
-            transcription = soup.select('.di-info .pron .ipa')[0].get_text(strip=True)
+            transcription = soup.select(".di-info .pron .ipa")[0].get_text(strip=True)
         except IndexError:
-            transcription = ''
+            transcription = ""
 
         # удаление экземпляров этого слова, которые уже есть в списке
         for same_word in Word.objects.filter(spelling__iexact=spelling, part_of_speech__iexact=pos):
@@ -293,11 +290,11 @@ class Command(BaseCommand):
                 same_word.delete()
 
         means, syns = self.load_yandex_data(spelling, pos)
-        means_str = ('; '.join(means)).strip().strip(';')
-        syns_str = ('; '.join(syns)).strip().strip(';')
+        means_str = ("; ".join(means)).strip().strip(";")
+        syns_str = ("; ".join(syns)).strip().strip(";")
 
-        if pos == 'noun':
-            logger.debug('Skip Noun')
+        if pos == "noun":
+            logger.debug("Skip Noun")
             return True
 
         # добавляю слово в список
@@ -314,59 +311,63 @@ class Command(BaseCommand):
         # произношения
         pronunciations_saved = []
         for pronunciation in prons:
-            if pronunciation['url'] not in pronunciations_saved:
-                pronunciations_saved.append(pronunciation['url'])
+            if pronunciation["url"] not in pronunciations_saved:
+                pronunciations_saved.append(pronunciation["url"])
                 pro_obj = Pronunciation(
                     word=word,
-                    description=pronunciation['region'],
-                    source=pronunciation['source'],
+                    description=pronunciation["region"],
+                    source=pronunciation["source"],
                 )
                 pro_obj.save()
-                self.download_sound(pronunciation['url'], pro_obj)
+                self.download_sound(pronunciation["url"], pro_obj)
 
         # значения
         if entry_body:
-            title = ''
+            title = ""
 
-            for sense_block in entry_body.select('.sense-block') or []:
+            for sense_block in entry_body.select(".sense-block") or []:
                 notes = []
 
-                s = sense_block.select('.sense-head > .sense-title')
+                s = sense_block.select(".sense-head > .sense-title")
                 if s:
-                    title = s[0].get_text(strip=True, separator=' ')
+                    title = s[0].get_text(strip=True, separator=" ")
 
-                xref = ''
-                s = sense_block.select('.sense-body .epp-xref')
+                xref = ""
+                s = sense_block.select(".sense-body .epp-xref")
                 if s:
                     xref = s[0].get_text(strip=True)
 
                 phrase_title = None
-                s = sense_block.select('.sense-body .phrase-title')
+                s = sense_block.select(".sense-body .phrase-title")
                 if s:
                     phrase_title = s[0].get_text(strip=True)
 
                 phrase_info = None
-                s = sense_block.select('.sense-body .phrase-info')
+                s = sense_block.select(".sense-body .phrase-info")
                 if s:
                     phrase_info = s[0].get_text(strip=True)
                     notes.append(phrase_info)
 
                 translation = None
-                s = sense_block.select('.sense-body .trans')
+                s = sense_block.select(".sense-body .trans")
                 if s:
-                    translation = s[0].get_text(strip=True, separator=' ')
+                    translation = s[0].get_text(strip=True, separator=" ")
 
                 interpretation = None
-                s = sense_block.select('.sense-body .def')
+                s = sense_block.select(".sense-body .def")
                 if s:
                     interpretation = s[0].get_text()
 
                 examp = []
-                s = sense_block.select('.sense-body .examp')
+                s = sense_block.select(".sense-body .examp")
                 for e in s:
-                    examp.append({
-                        'text': e.find('span', {'class': 'eg'}).get_text(strip=True, separator=' ').strip('.').strip(),
-                    })
+                    examp.append(
+                        {
+                            "text": (
+                                e.find("span", {"class": "eg"}).get_text(strip=True, separator=" ").strip(".").strip()
+                            ),
+                        }
+                    )
 
                 # print(title)
                 # print(xref)
@@ -387,23 +388,18 @@ class Command(BaseCommand):
                     translation=translation,
                     context=title.capitalize(),
                     level=xref,
-                    note=('; '.join(notes)).strip('; ')
+                    note=("; ".join(notes)).strip("; "),
                 )
                 definition_obj.save()
 
                 for example in examp:
                     example_obj = Example(
                         definition=definition_obj,
-                        text=example['text'],
+                        text=example["text"],
                     )
                     example_obj.save()
 
         if idiom_body:
-            logger.warning('IDIOM')
+            logger.warning("IDIOM")
 
         return word
-
-
-
-
-

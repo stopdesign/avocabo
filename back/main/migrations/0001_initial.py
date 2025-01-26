@@ -7,140 +7,297 @@ import main.models.user
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('auth', '0011_update_proxy_permissions'),
+        ("auth", "0011_update_proxy_permissions"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Definition',
+            name="Definition",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('spelling', models.CharField(blank=True, max_length=300)),
-                ('level', models.CharField(blank=True, max_length=100)),
-                ('translation', models.CharField(blank=True, max_length=1000)),
-                ('interpretation', models.CharField(blank=True, max_length=1000)),
-                ('context', models.CharField(blank=True, max_length=100)),
-                ('note', models.CharField(blank=True, max_length=1000)),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("spelling", models.CharField(blank=True, max_length=300)),
+                ("level", models.CharField(blank=True, max_length=100)),
+                ("translation", models.CharField(blank=True, max_length=1000)),
+                ("interpretation", models.CharField(blank=True, max_length=1000)),
+                ("context", models.CharField(blank=True, max_length=100)),
+                ("note", models.CharField(blank=True, max_length=1000)),
             ],
         ),
         migrations.CreateModel(
-            name='List',
+            name="List",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=300)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=300)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'ordering': ['-id'],
+                "ordering": ["-id"],
             },
         ),
         migrations.CreateModel(
-            name='Word',
+            name="Word",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('spelling', models.CharField(blank=True, max_length=300)),
-                ('part_of_speech', models.CharField(blank=True, choices=[(None, 'Unknown'), ('noun', 'Noun'), ('verb', 'Verb'), ('adverb', 'Adverb'), ('adjective', 'Adjective'), ('preposition', 'Preposition'), ('pronoun', 'Pronoun'), ('phrasal_verb', 'Phrasal verb'), ('word_plus_preposition', 'Word plus preposition'), ('adjective_and_preposition', 'Adjective and preposition'), ('noun_and_preposition', 'Noun and preposition'), ('verb_and_preposition', 'Verb and preposition')], default=None, max_length=30, null=True)),
-                ('transcription', models.CharField(blank=True, max_length=300)),
-                ('short_mean', models.CharField(blank=True, max_length=300)),
-                ('syn_string', models.CharField(blank=True, max_length=300)),
-                ('is_hidden', models.BooleanField(blank=True, default=False)),
-                ('success_cnt', models.IntegerField(default=0)),
-                ('error_cnt', models.IntegerField(default=0)),
-                ('status', models.CharField(blank=True, choices=[(None, 'New'), ('rotation', 'Rotation'), ('studying', 'Studying'), ('level_1', 'Level1'), ('done', 'Done')], default=None, max_length=30, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('list', models.ManyToManyField(blank=True, related_name='words', to='main.List')),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("spelling", models.CharField(blank=True, max_length=300)),
+                (
+                    "part_of_speech",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            (None, "Unknown"),
+                            ("noun", "Noun"),
+                            ("verb", "Verb"),
+                            ("adverb", "Adverb"),
+                            ("adjective", "Adjective"),
+                            ("preposition", "Preposition"),
+                            ("pronoun", "Pronoun"),
+                            ("phrasal_verb", "Phrasal verb"),
+                            ("word_plus_preposition", "Word plus preposition"),
+                            ("adjective_and_preposition", "Adjective and preposition"),
+                            ("noun_and_preposition", "Noun and preposition"),
+                            ("verb_and_preposition", "Verb and preposition"),
+                        ],
+                        default=None,
+                        max_length=30,
+                        null=True,
+                    ),
+                ),
+                ("transcription", models.CharField(blank=True, max_length=300)),
+                ("short_mean", models.CharField(blank=True, max_length=300)),
+                ("syn_string", models.CharField(blank=True, max_length=300)),
+                ("is_hidden", models.BooleanField(blank=True, default=False)),
+                ("success_cnt", models.IntegerField(default=0)),
+                ("error_cnt", models.IntegerField(default=0)),
+                (
+                    "status",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            (None, "New"),
+                            ("rotation", "Rotation"),
+                            ("studying", "Studying"),
+                            ("level_1", "Level1"),
+                            ("done", "Done"),
+                        ],
+                        default=None,
+                        max_length=30,
+                        null=True,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("list", models.ManyToManyField(blank=True, related_name="words", to="main.List")),
             ],
             options={
-                'ordering': ['-id'],
+                "ordering": ["-id"],
             },
         ),
         migrations.CreateModel(
-            name='Sentence',
+            name="Sentence",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('text', models.TextField(blank=True)),
-                ('success_cnt', models.IntegerField(default=0)),
-                ('error_cnt', models.IntegerField(default=0)),
-                ('is_hidden', models.BooleanField(blank=True, default=False)),
-                ('is_flaged', models.BooleanField(blank=True, default=False)),
-                ('status', models.CharField(blank=True, choices=[(None, 'New'), ('rotation', 'Rotation'), ('studying', 'Studying'), ('level_1', 'Level1'), ('done', 'Done')], default=None, max_length=30, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('list', models.ManyToManyField(blank=True, related_name='sentences', to='main.List')),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("text", models.TextField(blank=True)),
+                ("success_cnt", models.IntegerField(default=0)),
+                ("error_cnt", models.IntegerField(default=0)),
+                ("is_hidden", models.BooleanField(blank=True, default=False)),
+                ("is_flaged", models.BooleanField(blank=True, default=False)),
+                (
+                    "status",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            (None, "New"),
+                            ("rotation", "Rotation"),
+                            ("studying", "Studying"),
+                            ("level_1", "Level1"),
+                            ("done", "Done"),
+                        ],
+                        default=None,
+                        max_length=30,
+                        null=True,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("list", models.ManyToManyField(blank=True, related_name="sentences", to="main.List")),
             ],
             options={
-                'ordering': ['-id'],
+                "ordering": ["-id"],
             },
         ),
         migrations.CreateModel(
-            name='Pronunciation',
+            name="Pronunciation",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('audio', models.FileField(upload_to='audio')),
-                ('description', models.CharField(blank=True, max_length=30, null=True)),
-                ('source', models.CharField(blank=True, max_length=30, null=True)),
-                ('word', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='pronunciations', to='main.Word')),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("audio", models.FileField(upload_to="audio")),
+                ("description", models.CharField(blank=True, max_length=30, null=True)),
+                ("source", models.CharField(blank=True, max_length=30, null=True)),
+                (
+                    "word",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name="pronunciations", to="main.Word"
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Example',
+            name="Example",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('text', models.CharField(blank=True, max_length=1000)),
-                ('description', models.CharField(blank=True, max_length=30, null=True)),
-                ('definition', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='examples', to='main.Definition')),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("text", models.CharField(blank=True, max_length=1000)),
+                ("description", models.CharField(blank=True, max_length=30, null=True)),
+                (
+                    "definition",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name="examples", to="main.Definition"
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
-            model_name='definition',
-            name='word',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='definitions', to='main.Word'),
+            model_name="definition",
+            name="word",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, related_name="definitions", to="main.Word"
+            ),
         ),
         migrations.CreateModel(
-            name='Attempt',
+            name="Attempt",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('index', models.IntegerField(default=0)),
-                ('answer', models.CharField(max_length=100, null=True)),
-                ('result', models.CharField(choices=[('success', 'Success'), ('error', 'Error'), ('skip', 'Skip'), ('hint', 'Hint')], default='success', max_length=30)),
-                ('test', models.CharField(blank=True, choices=[(None, 'Unknown'), ('options', 'Options'), ('typing', 'Typing')], default=None, max_length=30, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('definition', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='attempt', to='main.Definition')),
-                ('sentence', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='attempt', to='main.Sentence')),
-                ('word', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='attempt', to='main.Word')),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("index", models.IntegerField(default=0)),
+                ("answer", models.CharField(max_length=100, null=True)),
+                (
+                    "result",
+                    models.CharField(
+                        choices=[("success", "Success"), ("error", "Error"), ("skip", "Skip"), ("hint", "Hint")],
+                        default="success",
+                        max_length=30,
+                    ),
+                ),
+                (
+                    "test",
+                    models.CharField(
+                        blank=True,
+                        choices=[(None, "Unknown"), ("options", "Options"), ("typing", "Typing")],
+                        default=None,
+                        max_length=30,
+                        null=True,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "definition",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="attempt",
+                        to="main.Definition",
+                    ),
+                ),
+                (
+                    "sentence",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="attempt",
+                        to="main.Sentence",
+                    ),
+                ),
+                (
+                    "word",
+                    models.ForeignKey(
+                        null=True, on_delete=django.db.models.deletion.CASCADE, related_name="attempt", to="main.Word"
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='User',
+            name="User",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('password', models.CharField(max_length=128, verbose_name='password')),
-                ('last_login', models.DateTimeField(blank=True, null=True, verbose_name='last login')),
-                ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
-                ('first_name', models.CharField(blank=True, max_length=30, verbose_name='first name')),
-                ('last_name', models.CharField(blank=True, max_length=150, verbose_name='last name')),
-                ('is_staff', models.BooleanField(default=False, help_text='Designates whether the user can log into this admin site.', verbose_name='staff status')),
-                ('is_active', models.BooleanField(default=True, help_text='Designates whether this user should be treated as active. Unselect this instead of deleting accounts.', verbose_name='active')),
-                ('date_joined', models.DateTimeField(default=django.utils.timezone.now, verbose_name='date joined')),
-                ('is_email_verified', models.BooleanField(default=False)),
-                ('email', models.EmailField(max_length=254, unique=True, verbose_name='email address')),
-                ('username', models.CharField(default=main.models.user.uuid4_hex, error_messages={'unique': 'A user with that UID already exists.'}, help_text='Required.', max_length=150, unique=True, verbose_name='username')),
-                ('password_changed_at', models.DateTimeField(blank=True, null=True)),
-                ('groups', models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.Group', verbose_name='groups')),
-                ('user_permissions', models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set', related_query_name='user', to='auth.Permission', verbose_name='user permissions')),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("password", models.CharField(max_length=128, verbose_name="password")),
+                ("last_login", models.DateTimeField(blank=True, null=True, verbose_name="last login")),
+                (
+                    "is_superuser",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Designates that this user has all permissions without explicitly assigning them.",
+                        verbose_name="superuser status",
+                    ),
+                ),
+                ("first_name", models.CharField(blank=True, max_length=30, verbose_name="first name")),
+                ("last_name", models.CharField(blank=True, max_length=150, verbose_name="last name")),
+                (
+                    "is_staff",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Designates whether the user can log into this admin site.",
+                        verbose_name="staff status",
+                    ),
+                ),
+                (
+                    "is_active",
+                    models.BooleanField(
+                        default=True,
+                        help_text=(
+                            "Designates whether this user should be treated as active. Unselect this instead of"
+                            " deleting accounts."
+                        ),
+                        verbose_name="active",
+                    ),
+                ),
+                ("date_joined", models.DateTimeField(default=django.utils.timezone.now, verbose_name="date joined")),
+                ("is_email_verified", models.BooleanField(default=False)),
+                ("email", models.EmailField(max_length=254, unique=True, verbose_name="email address")),
+                (
+                    "username",
+                    models.CharField(
+                        default=main.models.user.uuid4_hex,
+                        error_messages={"unique": "A user with that UID already exists."},
+                        help_text="Required.",
+                        max_length=150,
+                        unique=True,
+                        verbose_name="username",
+                    ),
+                ),
+                ("password_changed_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "groups",
+                    models.ManyToManyField(
+                        blank=True,
+                        help_text=(
+                            "The groups this user belongs to. A user will get all permissions granted to each of their"
+                            " groups."
+                        ),
+                        related_name="user_set",
+                        related_query_name="user",
+                        to="auth.Group",
+                        verbose_name="groups",
+                    ),
+                ),
+                (
+                    "user_permissions",
+                    models.ManyToManyField(
+                        blank=True,
+                        help_text="Specific permissions for this user.",
+                        related_name="user_set",
+                        related_query_name="user",
+                        to="auth.Permission",
+                        verbose_name="user permissions",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'auth_user',
-                'permissions': (),
+                "db_table": "auth_user",
+                "permissions": (),
             },
             managers=[
-                ('objects', main.models.user.UserModelManager()),
+                ("objects", main.models.user.UserModelManager()),
             ],
         ),
     ]

@@ -1,16 +1,11 @@
-import json
 import logging
-from datetime import datetime, timedelta
-from django.conf import settings
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
-from django.db import models, transaction
-from django.db.models import CASCADE, SET_NULL, PROTECT, Max, Avg
-from django.utils.timezone import utc
-from wordfreq import zipf_frequency
-
+from django.db import models
+from django.db.models import CASCADE
 from project.helpers.choice_enum import ChoiceEnum
-
+from wordfreq import zipf_frequency
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +14,7 @@ User = get_user_model()
 
 class RotationList:
     id = 0
-    name = 'Rotation'
+    name = "Rotation"
     request = None
 
     def __init__(self, request):
@@ -35,13 +30,13 @@ class RotationList:
             rotation = user.rotation
         else:
             user = AnonymousUser()
-            rotation = '2488 2490 2270 2543 2612 1369 2322 1681 1986 1626'  # 2638  2496  2358  1428
+            rotation = "2488 2490 2270 2543 2612 1369 2322 1681 1986 1626"  # 2638  2496  2358  1428
 
-        rotation = rotation.strip().split(' ')
+        rotation = rotation.strip().split(" ")
         rotation = filter(None, rotation)
         rotation = [int(r) for r in rotation]
 
-        words_to_test = Word.objects.filter(id__in=rotation).order_by('?')
+        words_to_test = Word.objects.filter(id__in=rotation).order_by("?")
 
         return words_to_test
 
@@ -52,9 +47,9 @@ class List(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     updated_at = models.DateTimeField(auto_now=True, editable=False)
 
-    owner = models.ForeignKey(User, related_name='lists', on_delete=CASCADE, null=True)
+    owner = models.ForeignKey(User, related_name="lists", on_delete=CASCADE, null=True)
 
-    sharable = models.BooleanField(default=False, help_text='Able to be shared')
+    sharable = models.BooleanField(default=False, help_text="Able to be shared")
 
     # @property
     # def stat(self):
@@ -106,22 +101,22 @@ class List(models.Model):
     #     return mean
 
     def __str__(self):
-        return '%s' % self.name
+        return "%s" % self.name
 
     class Meta:
-        ordering = ['-id']
+        ordering = ["-id"]
 
 
 class UserList(models.Model):
-    user = models.ForeignKey('User', related_name='user_lists', on_delete=models.SET_NULL, null=True, blank=True)
-    list = models.ForeignKey('List', related_name='user_lists', on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey("User", related_name="user_lists", on_delete=models.SET_NULL, null=True, blank=True)
+    list = models.ForeignKey("List", related_name="user_lists", on_delete=models.SET_NULL, null=True, blank=True)
 
     hidden = models.BooleanField(default=False)
 
 
 class UserWord(models.Model):
-    user = models.ForeignKey('User', related_name='user_words', on_delete=models.SET_NULL, null=True, blank=True)
-    word = models.ForeignKey('Word', related_name='user_words', on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey("User", related_name="user_words", on_delete=models.SET_NULL, null=True, blank=True)
+    word = models.ForeignKey("Word", related_name="user_words", on_delete=models.SET_NULL, null=True, blank=True)
 
     score = models.IntegerField(default=0)
     hidden = models.BooleanField(default=False)
@@ -129,20 +124,19 @@ class UserWord(models.Model):
 
 
 class Word(models.Model):
-
     class Pos(ChoiceEnum):
         Unknown = None
-        Noun = 'noun'
-        Verb = 'verb'
-        Adverb = 'adverb'
-        Adjective = 'adjective'
-        Preposition = 'preposition'
-        Pronoun = 'pronoun'
-        Phrasal_verb = 'phrasal_verb'
-        Word_plus_preposition = 'word_plus_preposition'
-        Adjective_and_preposition = 'adjective_and_preposition'
-        Noun_and_preposition = 'noun_and_preposition'
-        Verb_and_preposition = 'verb_and_preposition'
+        Noun = "noun"
+        Verb = "verb"
+        Adverb = "adverb"
+        Adjective = "adjective"
+        Preposition = "preposition"
+        Pronoun = "pronoun"
+        Phrasal_verb = "phrasal_verb"
+        Word_plus_preposition = "word_plus_preposition"
+        Adjective_and_preposition = "adjective_and_preposition"
+        Noun_and_preposition = "noun_and_preposition"
+        Verb_and_preposition = "verb_and_preposition"
 
     # class Status(ChoiceEnum):
     #     New = None
@@ -151,7 +145,7 @@ class Word(models.Model):
     #     Level1 = 'level_1'     # пройден первый этап
     #     Done = 'done'  # есть весь набор правильных ответов
 
-    list = models.ManyToManyField('List', related_name='words', blank=True)
+    list = models.ManyToManyField("List", related_name="words", blank=True)
     spelling = models.CharField(max_length=300, blank=True)
     part_of_speech = models.CharField(max_length=30, blank=True, null=True, choices=Pos.choices(), default=None)
     transcription = models.CharField(max_length=300, blank=True)
@@ -171,7 +165,7 @@ class Word(models.Model):
 
     @property
     def zipf(self):
-        return zipf_frequency(self.spelling, 'en', wordlist='best')
+        return zipf_frequency(self.spelling, "en", wordlist="best")
 
     # @property
     # def tag(self):
@@ -189,14 +183,14 @@ class Word(models.Model):
     #     return res
 
     def __str__(self):
-        return '%s' % self.spelling
+        return "%s" % self.spelling
 
     class Meta:
-        ordering = ['-id']
+        ordering = ["-id"]
 
 
 class Definition(models.Model):
-    word = models.ForeignKey('Word', related_name='definitions', on_delete=CASCADE)
+    word = models.ForeignKey("Word", related_name="definitions", on_delete=CASCADE)
     spelling = models.CharField(max_length=300, blank=True)
     level = models.CharField(max_length=100, blank=True)
     translation = models.CharField(max_length=1000, blank=True)
@@ -205,32 +199,31 @@ class Definition(models.Model):
     note = models.CharField(max_length=1000, blank=True)
 
     def __str__(self):
-        return '%s' % self.spelling
+        return "%s" % self.spelling
 
 
 class Example(models.Model):
-    definition = models.ForeignKey('Definition', related_name='examples', on_delete=CASCADE)
+    definition = models.ForeignKey("Definition", related_name="examples", on_delete=CASCADE)
     text = models.CharField(max_length=1000, blank=True)
     description = models.CharField(max_length=30, blank=True, null=True)
 
     def __str__(self):
-        return '%s' % self.text
+        return "%s" % self.text
 
 
 class Pronunciation(models.Model):
     # https://www.oxfordlearnersdictionaries.com/wordlists/oxford3000-5000
     # https://www.dictionary.com/browse/fire?s=t
-    word = models.ForeignKey('Word', related_name='pronunciations', on_delete=CASCADE)
-    audio = models.FileField(upload_to='audio')
+    word = models.ForeignKey("Word", related_name="pronunciations", on_delete=CASCADE)
+    audio = models.FileField(upload_to="audio")
     description = models.CharField(max_length=30, blank=True, null=True)
     source = models.CharField(max_length=30, blank=True, null=True)
 
     def __str__(self):
-        return '%s: %s' % (self.word, self.description)
+        return "%s: %s" % (self.word, self.description)
 
 
 class Sentence(models.Model):
-
     # class Status(ChoiceEnum):
     #     New = None
     #     Rotation = 'rotation'  # находится в ротации в данный момент
@@ -238,7 +231,7 @@ class Sentence(models.Model):
     #     Level1 = 'level_1'     # пройден первый этап
     #     Done = 'done'          # есть весь набор правильных ответов
 
-    list = models.ManyToManyField('List', related_name='sentences', blank=True)
+    list = models.ManyToManyField("List", related_name="sentences", blank=True)
     text = models.TextField(blank=True)
 
     # success_cnt = models.IntegerField(default=0)
@@ -253,31 +246,30 @@ class Sentence(models.Model):
     updated_at = models.DateTimeField(auto_now=True, editable=False)
 
     def __str__(self):
-        return '%s' % self.text
+        return "%s" % self.text
 
     class Meta:
-        ordering = ['-id']
+        ordering = ["-id"]
 
 
 class Attempt(models.Model):
-
     class Res(ChoiceEnum):
-        Success = 'success'
-        Error = 'error'
-        Skip = 'skip'
-        Hint = 'hint'
+        Success = "success"
+        Error = "error"
+        Skip = "skip"
+        Hint = "hint"
 
     class Test(ChoiceEnum):
         Unknown = None
-        Options = 'options'
-        Typing = 'typing'
+        Options = "options"
+        Typing = "typing"
 
-    user = models.ForeignKey(User, related_name='attempts', on_delete=CASCADE, null=True)
+    user = models.ForeignKey(User, related_name="attempts", on_delete=CASCADE, null=True)
 
-    word = models.ForeignKey('Word', related_name='attempts', on_delete=CASCADE, null=True)
-    definition = models.ForeignKey('Definition', related_name='attempts', on_delete=CASCADE, null=True)
+    word = models.ForeignKey("Word", related_name="attempts", on_delete=CASCADE, null=True)
+    definition = models.ForeignKey("Definition", related_name="attempts", on_delete=CASCADE, null=True)
 
-    sentence = models.ForeignKey('Sentence', related_name='attempts', on_delete=CASCADE, null=True)
+    sentence = models.ForeignKey("Sentence", related_name="attempts", on_delete=CASCADE, null=True)
     index = models.IntegerField(default=0)
     answer = models.CharField(max_length=100, null=True)
 

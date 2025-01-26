@@ -1,17 +1,17 @@
-import sys
 import logging
+import sys
+
 from django.core.management.color import color_style
 
 
 class StdoutHandler(logging.StreamHandler):
-
     def __init__(self, stream=None):
         super(StdoutHandler, self).__init__(stream or sys.stdout)
 
 
 class DjangoColorsFormatter(logging.Formatter):
     def __init__(self, *args, **kwargs):
-        super(DjangoColorsFormatter, self).__init__(style='{', *args, **kwargs)
+        super(DjangoColorsFormatter, self).__init__(style="{", *args, **kwargs)
         self.style = self.configure_style(color_style())
 
     def configure_style(self, style):
@@ -30,7 +30,7 @@ class DjangoColorsFormatter(logging.Formatter):
         # print('record', type(record))
 
         # немного сокращаю название модуля
-        if '.management.commands.' in record.name:
+        if ".management.commands." in record.name:
             message = message.replace(str(record.name), str(record.module))
 
         res = colorizer(message)

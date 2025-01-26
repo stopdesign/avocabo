@@ -1,8 +1,9 @@
-import logging
 from decimal import Decimal
-from django.core.management.commands.runserver import Command as RunserverCommand
+
 from django.contrib.staticfiles.management.commands.runserver import Command
+from django.core.management.commands.runserver import Command as RunserverCommand
 from django.forms import NumberInput
+
 # from django_cron import CronJobManager, get_current_time
 
 
@@ -10,17 +11,18 @@ from django.forms import NumberInput
 # Патчим поле NumberInput, чтобы не было проблем с Scientific Notation у малых значений Decimal.
 # Заодно выключаются всякие там стрелочки внутри полей с числами.
 
+
 def format_value(self, value):
-    if value == '' or value is None:
+    if value == "" or value is None:
         return None
     if isinstance(value, Decimal):
-        return '{:f}'.format(value)
+        return "{:f}".format(value)
     else:
         return str(value)
 
 
 NumberInput.format_value = format_value
-NumberInput.input_type = 'text'
+NumberInput.input_type = "text"
 
 
 ###

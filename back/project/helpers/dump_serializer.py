@@ -1,8 +1,6 @@
 from django.conf import settings
+from django.core.serializers.json import Serializer as JsonSerializer
 from django.utils.encoding import is_protected_type
-from django.core.serializers.json import (
-    Serializer as JsonSerializer
-)
 
 
 class Serializer(JsonSerializer):

@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('main', '0002_user_relations'),
+        ("main", "0002_user_relations"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='list',
-            name='sharable',
-            field=models.BooleanField(default=False, help_text='Able to be shared'),
+            model_name="list",
+            name="sharable",
+            field=models.BooleanField(default=False, help_text="Able to be shared"),
         ),
     ]

@@ -11,7 +11,7 @@ class RegisterSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
     def update(self, instance, validated_data):
-        raise NotImplementedError('`update()` must be implemented.')
+        raise NotImplementedError("`update()` must be implemented.")
 
     # TODO(gregory): валидирует ли set_password?
     # def validate_password(self, password):
@@ -19,13 +19,13 @@ class RegisterSerializer(serializers.Serializer):
     #     return validate_password(password)
 
     def validate(self, data):
-        print('validate', data)
+        print("validate", data)
         return data
 
     def create(self, validated_data):
-        password = validated_data.pop('password')
+        password = validated_data.pop("password")
 
-        print('validated_data', validated_data)
+        print("validated_data", validated_data)
 
         user_model = get_user_model()
         user = user_model(**validated_data)

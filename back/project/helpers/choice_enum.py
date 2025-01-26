@@ -26,7 +26,7 @@ class ChoiceEnum(Enum):
         return tuple(values)
 
     def __str__(self):
-        return self.name.replace('_', ' ')
+        return self.name.replace("_", " ")
 
     def __int__(self):
         return self.value

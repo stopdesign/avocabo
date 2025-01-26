@@ -15,13 +15,11 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-
-    help = 'Test payments'
+    help = "Test payments"
 
     def handle(self, *args, **options):
-
         self.def_list = List.objects.get(id=21)
-        self.test('dariko_1.txt')
+        self.test("dariko_1.txt")
 
     def send_waves(self):
         pass
@@ -44,10 +42,10 @@ class Command(BaseCommand):
 
         app_id = settings.OXFORD_DICTIONARIES_APP_ID
         app_key = settings.OXFORD_DICTIONARIES_API_KEY
-        word_id = 'example'
-        params = 'fields=definitions%2Cexamples%2Cpronunciations&strictMatch=true'
-        url = 'https://od-api.oxforddictionaries.com:443/api/v2/entries/en-us/%s?%s' % (word_id.lower(), params)
-        r = requests.get(url, headers={'app_id': app_id, 'app_key': app_key})
+        word_id = "example"
+        params = "fields=definitions%2Cexamples%2Cpronunciations&strictMatch=true"
+        url = "https://od-api.oxforddictionaries.com:443/api/v2/entries/en-us/%s?%s" % (word_id.lower(), params)
+        r = requests.get(url, headers={"app_id": app_id, "app_key": app_key})
 
         # https://od-api.oxforddictionaries.com:443/api/v2/entries/en-us/fire?fields=definitions%2Cexamples%2Cpronunciations&strictMatch=true
         # The /senses/ endpoint returns a list of senses (i.e. meanings of words) documented in the OED, optionally filtered by a range of parameters.
@@ -93,39 +91,35 @@ class Command(BaseCommand):
         # https://www.twinword.com/api/lemmatizer.php
 
     def download_sound(self, path, pronunciation):
-
         resp = requests.get(path)
         if resp.status_code != requests.codes.ok:
-            raise Exception('sound file downloading error')
+            raise Exception("sound file downloading error")
 
         fp = BytesIO()
         fp.write(resp.content)
 
         # Get the filename from the url, used for saving later
-        file_name = path.split('/')[-1]
+        file_name = path.split("/")[-1]
 
         pronunciation.audio.save(file_name, files.File(fp))
 
-
     def test(self, filename):
-
-        f = open(filename, 'r')
+        f = open(filename, "r")
 
         # all_text = f.read().decode('string-escape').decode('utf-8')
-        all_text = f.read().strip().replace(u'—', '-')  # [399200:399300]
+        all_text = f.read().strip().replace("—", "-")  # [399200:399300]
 
         words = []
 
-        for word in all_text.replace('\r', ' ').replace('\t', ' ').replace('?', ' ').strip().split('\n'):
-            word = word.strip('''*,"'();:.-!?''').lower()
+        for word in all_text.replace("\r", " ").replace("\t", " ").replace("?", " ").strip().split("\n"):
+            word = word.strip("""*,"'();:.-!?""").lower()
 
-            if len(word) < 4 or any(i.isdigit() or i == '.' for i in word):
+            if len(word) < 4 or any(i.isdigit() or i == "." for i in word):
                 continue
 
             words.append(word)
 
         for spelling in words[:2000]:
-
             # print('\n')
             # print(spelling)
             sleep(0.1)
@@ -133,9 +127,9 @@ class Command(BaseCommand):
             app_id = settings.OXFORD_DICTIONARIES_APP_ID
             app_key = settings.OXFORD_DICTIONARIES_API_KEY
             word_id = spelling
-            params = 'fields=definitions%2Cexamples%2Cpronunciations&strictMatch=true'
-            url = 'https://od-api.oxforddictionaries.com:443/api/v2/entries/en-us/%s?%s' % (word_id.lower(), params)
-            r = requests.get(url, headers={'app_id': app_id, 'app_key': app_key})
+            params = "fields=definitions%2Cexamples%2Cpronunciations&strictMatch=true"
+            url = "https://od-api.oxforddictionaries.com:443/api/v2/entries/en-us/%s?%s" % (word_id.lower(), params)
+            r = requests.get(url, headers={"app_id": app_id, "app_key": app_key})
 
             res = r.json()
             # print(json.dumps(res, indent=2, ensure_ascii=False))
@@ -146,7 +140,7 @@ class Command(BaseCommand):
             word = Word(spelling=spelling)
 
             try:
-                lexs = res['results'][0]['lexicalEntries']
+                lexs = res["results"][0]["lexicalEntries"]
             except:
                 logger.error(spelling)
                 continue
@@ -155,36 +149,40 @@ class Command(BaseCommand):
             word.save()
             self.def_list.words.add(word)
 
-            transcription = ''
+            transcription = ""
             pronunciations = []
 
             for lex in lexs:
-                spelling = lex['text']
-                pos = lex['lexicalCategory']['id']
-                for pro in lex.get('pronunciations', []):
+                spelling = lex["text"]
+                pos = lex["lexicalCategory"]["id"]
+                for pro in lex.get("pronunciations", []):
                     if (
-                        pro['phoneticNotation'] == 'IPA' and
-                        'audioFile' in pro and
-                        'American English' in pro.get('dialects', [])
+                        pro["phoneticNotation"] == "IPA"
+                        and "audioFile" in pro
+                        and "American English" in pro.get("dialects", [])
                     ):
-                        pronunciations.append({
-                            'url': pro['audioFile'],
-                            'source': 'oxforddictionaries',
-                            'description': 'American English',
-                        })
-                        transcription = pro['phoneticSpelling']
-                if len(lex.get('entries', [])) != 1:
-                    logger.error('NO ENTRIES FOR: %s' % spelling)
+                        pronunciations.append(
+                            {
+                                "url": pro["audioFile"],
+                                "source": "oxforddictionaries",
+                                "description": "American English",
+                            }
+                        )
+                        transcription = pro["phoneticSpelling"]
+                if len(lex.get("entries", [])) != 1:
+                    logger.error("NO ENTRIES FOR: %s" % spelling)
                     continue
 
-                for definition in lex['entries'][0]['senses']:
-                    description = '; '.join(definition['definitions']).strip().strip(';')
+                for definition in lex["entries"][0]["senses"]:
+                    description = "; ".join(definition["definitions"]).strip().strip(";")
                     translation = None
                     examples = []
-                    for ex in definition.get('examples', []):
-                        examples.append({
-                            'text': ex['text'],
-                        })
+                    for ex in definition.get("examples", []):
+                        examples.append(
+                            {
+                                "text": ex["text"],
+                            }
+                        )
 
                     # print(spelling, pos, transcription)
                     # print('description:', description)
@@ -203,27 +201,24 @@ class Command(BaseCommand):
                     definition_obj.save()
 
                     for example in examples:
-                        example_obj = Example(
-                            definition=definition_obj,
-                            text=example['text']
-                        )
+                        example_obj = Example(definition=definition_obj, text=example["text"])
                         example_obj.save()
 
             pronunciations_saved = []
             for pronunciation in pronunciations:
-                if pronunciation['url'] not in pronunciations_saved:
-                    pronunciations_saved.append(pronunciation['url'])
+                if pronunciation["url"] not in pronunciations_saved:
+                    pronunciations_saved.append(pronunciation["url"])
                     pro_obj = Pronunciation(
                         word=word,
-                        description=pronunciation['description'],
-                        source=pronunciation['source'],
+                        description=pronunciation["description"],
+                        source=pronunciation["source"],
                     )
                     pro_obj.save()
-                    self.download_sound(pronunciation['url'], pro_obj)
+                    self.download_sound(pronunciation["url"], pro_obj)
 
             continue
 
-            ya_base = 'https://dictionary.yandex.net/api/v1/dicservice.json/lookup?key=%s&lang=en-ru&text=%s'
+            ya_base = "https://dictionary.yandex.net/api/v1/dicservice.json/lookup?key=%s&lang=en-ru&text=%s"
             url = ya_base % (settings.YANDEX_DICT_API_KEY, spelling)
             r = requests.get(url)
 
@@ -239,36 +234,37 @@ class Command(BaseCommand):
             word.save()
             self.def_list.words.add(word)
 
-            for definition in res['def']:
-
-                if 'ts' not in definition:
+            for definition in res["def"]:
+                if "ts" not in definition:
                     continue
 
-                spelling = definition.get('text', word.spelling)
-                pos = definition.get('pos')
-                transcription = definition['ts']
-                trs = definition.get('tr', [])
+                spelling = definition.get("text", word.spelling)
+                pos = definition.get("pos")
+                transcription = definition["ts"]
+                trs = definition.get("tr", [])
 
                 translations = []
                 for tr in trs:
-                    if tr.get('text'):
-                        translations.append(tr.get('text'))
+                    if tr.get("text"):
+                        translations.append(tr.get("text"))
 
                 means = []
                 for tr in trs:
-                    for mean in tr.get('mean', []):
-                        means.append(mean['text'])
+                    for mean in tr.get("mean", []):
+                        means.append(mean["text"])
 
                 examples = []
                 for tr in trs:
-                    for ex in tr.get('ex', []):
-                        examples.append({
-                            'text': ex['text'],
-                            'trans': ('; '.join([t['text'] for t in ex['tr']])).strip().strip(';'),
-                        })
+                    for ex in tr.get("ex", []):
+                        examples.append(
+                            {
+                                "text": ex["text"],
+                                "trans": ("; ".join([t["text"] for t in ex["tr"]])).strip().strip(";"),
+                            }
+                        )
 
-                description = '; '.join(means).strip().strip(';')
-                translation = '; '.join(translations).strip().strip(';')
+                description = "; ".join(means).strip().strip(";")
+                translation = "; ".join(translations).strip().strip(";")
 
                 # print(spelling, pos, transcription)
                 # print('description:', description)
@@ -287,8 +283,5 @@ class Command(BaseCommand):
                 definition_obj.save()
 
                 for example in examples:
-                    example_obj = Example(
-                        definition=definition_obj,
-                        text=example['text']
-                    )
+                    example_obj = Example(definition=definition_obj, text=example["text"])
                     example_obj.save()

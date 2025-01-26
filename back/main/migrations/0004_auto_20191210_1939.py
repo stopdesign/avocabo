@@ -4,19 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('main', '0003_list_sharable'),
+        ("main", "0003_list_sharable"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='list',
-            name='viewer',
+            model_name="list",
+            name="viewer",
         ),
         migrations.AddField(
-            model_name='user',
-            name='subscriptions',
-            field=models.ManyToManyField(related_name='user_set', to='main.List'),
+            model_name="user",
+            name="subscriptions",
+            field=models.ManyToManyField(related_name="user_set", to="main.List"),
         ),
     ]

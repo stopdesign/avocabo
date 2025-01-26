@@ -1,34 +1,44 @@
 import logging
+
 from admin_decorators import boolean
+from django.contrib import admin
 from django.contrib.admin import ModelAdmin, StackedInline
 from django.db.models import Count, Max
-from main.models import List, Word, Definition, Pronunciation, Example, Attempt, Sentence
 from project.admin import custom_admin_site
-from django.contrib import admin
+
+from main.models import Attempt, Definition, Example, List, Pronunciation, Sentence, Word
 
 logger = logging.getLogger(__name__)
 
 
 @admin.register(List, site=custom_admin_site)
 class ListAdmin(ModelAdmin):
-    list_display = ['name', 'owner', 'sharable', 'created_at']
-    fields = ['name', 'owner', 'sharable']
-    readonly_fields = ['owner']
-    list_filter = ['sharable']
+    list_display = ["name", "owner", "sharable", "created_at"]
+    fields = ["name", "owner", "sharable"]
+    readonly_fields = ["owner"]
+    list_filter = ["sharable"]
 
 
 class DefinitionInline(StackedInline):
     model = Definition
-    list_display = ['spelling', 'interpretation', 'translation']
+    list_display = ["spelling", "interpretation", "translation"]
     extra = 0
 
 
 @admin.register(Word, site=custom_admin_site)
 class WordAdmin(ModelAdmin):
-    list_display = ['spelling', 'part_of_speech', 'zipf',
-                    'has_audio', 'has_definition', 'has_example', 'short_mean', 'syn_string']
-    list_filter = ['list', 'part_of_speech']
-    search_fields = ['spelling', 'short_mean', 'syn_string']
+    list_display = [
+        "spelling",
+        "part_of_speech",
+        "zipf",
+        "has_audio",
+        "has_definition",
+        "has_example",
+        "short_mean",
+        "syn_string",
+    ]
+    list_filter = ["list", "part_of_speech"]
+    search_fields = ["spelling", "short_mean", "syn_string"]
     actions_on_top = False
     actions_on_bottom = True
 
@@ -56,9 +66,9 @@ class WordAdmin(ModelAdmin):
 
 @admin.register(Sentence, site=custom_admin_site)
 class SentenceAdmin(ModelAdmin):
-    list_display = ['id', 'text', 'is_hidden', 'is_flaged']
-    list_filter = ['list', 'is_hidden', 'is_flaged']
-    search_fields = ['text']
+    list_display = ["id", "text", "is_hidden", "is_flaged"]
+    list_filter = ["list", "is_hidden", "is_flaged"]
+    search_fields = ["text"]
     actions_on_top = False
     actions_on_bottom = True
 
@@ -70,53 +80,63 @@ class PronunciationAdmin(ModelAdmin):
 
 @admin.register(Example, site=custom_admin_site)
 class ExampleAdmin(ModelAdmin):
-    list_display = ['definition', 'text', 'description']
-    search_fields = ['text', 'description']
+    list_display = ["definition", "text", "description"]
+    search_fields = ["text", "description"]
     actions_on_top = False
     actions_on_bottom = True
 
 
 @admin.register(Attempt, site=custom_admin_site)
 class AttemptAdmin(ModelAdmin):
-    list_display = ['created_at', 'word', 'sentence', 'answer', 'definition', 'test', 'result',]
-    list_filter = ['result', 'created_at']
-    readonly_fields = ['user', 'word', 'definition', 'sentence']
+    list_display = [
+        "created_at",
+        "word",
+        "sentence",
+        "answer",
+        "definition",
+        "test",
+        "result",
+    ]
+    list_filter = ["result", "created_at"]
+    readonly_fields = ["user", "word", "definition", "sentence"]
 
 
 class ExampleInline(StackedInline):
     model = Example
-    list_display = ['text', 'description']
+    list_display = ["text", "description"]
     extra = 0
 
 
 class ItemCountListFilter(admin.SimpleListFilter):
-    title = 'examples count'
+    title = "examples count"
 
     # Parameter for the filter that will be used in the URL query.
-    parameter_name = 'count'
+    parameter_name = "count"
 
     def lookups(self, request, model_admin):
-        max_value = Definition.objects.all().annotate(
-            count_items=Count('examples')
-        ).aggregate(max_value=Max('count_items'))['max_value']
+        max_value = (
+            Definition.objects.all()
+            .annotate(count_items=Count("examples"))
+            .aggregate(max_value=Max("count_items"))["max_value"]
+        )
         return [(i, i) for i in range(0, max_value)]
 
     def queryset(self, request, queryset):
         val = self.value()
         if val is not None:
-            return queryset.annotate(count_items=Count('examples')).filter(count_items=self.value())
+            return queryset.annotate(count_items=Count("examples")).filter(count_items=self.value())
         else:
             return queryset
 
 
 @admin.register(Definition, site=custom_admin_site)
 class DefinitionAdmin(ModelAdmin):
-    list_display = ['word', 'spelling', 'interpretation', 'translation', 'level', 'has_example']
-    list_select_related = ['word']
-    list_filter = ['word__list', 'level', ItemCountListFilter]
-    list_editable = ['spelling', 'interpretation', 'translation']
-    search_fields = ['spelling', 'interpretation', 'translation', 'context']
-    readonly_fields = ['word']
+    list_display = ["word", "spelling", "interpretation", "translation", "level", "has_example"]
+    list_select_related = ["word"]
+    list_filter = ["word__list", "level", ItemCountListFilter]
+    list_editable = ["spelling", "interpretation", "translation"]
+    search_fields = ["spelling", "interpretation", "translation", "context"]
+    readonly_fields = ["word"]
     inlines = [ExampleInline]
     actions_on_top = False
     actions_on_bottom = True

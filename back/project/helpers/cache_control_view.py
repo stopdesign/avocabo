@@ -7,8 +7,8 @@ class CacheMixin:
     def render_to_response(self, *args, **kwargs):
         response = super(CacheMixin, self).render_to_response(*args, **kwargs)
         if isinstance(self.cache_max_age, int):
-            response['Cache-Control'] = 'private, max-age=%s' % self.cache_max_age
-            response['X-Accel-Expires'] = self.cache_max_age
+            response["Cache-Control"] = "private, max-age=%s" % self.cache_max_age
+            response["X-Accel-Expires"] = self.cache_max_age
         return response
 
 

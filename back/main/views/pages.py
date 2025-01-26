@@ -1,34 +1,45 @@
+import json
+import logging
 import random
 import re
-from datetime import date, datetime, timedelta
-from time import sleep
-import jellyfish
-from collections import Counter
+from datetime import datetime, timedelta
 
-from django.contrib.auth.models import AnonymousUser
+import jellyfish
+from django.db.models import Count
+from django.db.models.functions import TruncDate
+from django.http import Http404, HttpResponse, HttpResponseForbidden
 from django.template.response import TemplateResponse
-from django.db.models import F, Count, Q
-from django.utils.timezone import utc
-from rest_framework.generics import GenericAPIView, get_object_or_404
+from django.utils import timezone
+from project.helpers.stuff import daterange
+from rest_framework.generics import GenericAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from main.models import Attempt, List, Sentence, User, UserList, UserWord, Word
 from main.models.words import RotationList
-from main.serializers import ListSerializer, ListDetailsSerializer, WordSerializer, AttemptSerializer, \
-    UserListSerializer, UserWordSerializer
-from main.models import List, Word, Attempt, Sentence, User, UserList, UserWord
-import json
-import logging
-from django.http import HttpResponse, Http404, HttpResponseForbidden
-
-from project.helpers.stuff import daterange
+from main.serializers import (
+    AttemptSerializer,
+    ListDetailsSerializer,
+    ListSerializer,
+    UserListSerializer,
+    UserWordSerializer,
+    WordSerializer,
+)
 
 logger = logging.getLogger(__name__)
 
 
 SOME_PREPS = [
-    'in', 'by', 'with', 'of', 'to', 'for', 'at', 'about', 'on',
+    "in",
+    "by",
+    "with",
+    "of",
+    "to",
+    "for",
+    "at",
+    "about",
+    "on",
     # 'of', 'with', 'at', 'from', 'into', 'to', 'in', 'for', 'on', 'by', 'about', 'like', 'up', 'after', 'over', 'before',
     # 'since', 'under', 'through', 'within', 'across', 'behind', 'beyond', 'out', 'around', 'down', 'off', 'above'
 ]
@@ -39,31 +50,36 @@ def index(request):
     Главная страница (куча списков и статистика по ответам в день)
     """
 
-    dt = datetime.now() - timedelta(days=14)
-    counts = Attempt.objects.filter(created_at__gte=dt).extra({
-        'dt': 'date(created_at)'}).values('dt').order_by('dt').annotate(cnt=Count('id'))
+    # Use timezone-aware now
+    dt = timezone.now() - timedelta(days=14)
+
+    counts = (
+        Attempt.objects.filter(created_at__gte=dt)
+        .annotate(dt=TruncDate("created_at"))
+        .values("dt")
+        .annotate(cnt=Count("id"))
+        .order_by("dt")
+    )
 
     user_rotation = None
-
     if request.user.is_authenticated:
-        user = User.objects.get(id=request.user.pk)
+        user = request.user  # No need to re-query
         user.update_rotation()
         user_rotation = user.rotation
-
-        print('user_rotation', user_rotation)
+        # print("user_rotation", user_rotation)
 
     context = {
-        'counts': json.dumps(list(counts), indent=2),
-        'lists': List.objects.all(),
-        'user_rotation': user_rotation,
+        "counts": json.dumps(list(counts), indent=2, default=str),
+        "lists": List.objects.all(),
+        "user_rotation": user_rotation,
     }
-    return TemplateResponse(request, 'index.html', context)
+    return TemplateResponse(request, "index.html", context)
 
 
-def chunks(l, n):
+def chunks(lst, n):
     """Yield successive n-sized chunks from l."""
-    for i in range(0, len(l), n):
-        yield l[i:i + n]
+    for i in range(0, len(lst), n):
+        yield lst[i : i + n]
 
 
 def words(request, list_id):
@@ -72,10 +88,11 @@ def words(request, list_id):
     """
     try:
         words_list = List.objects.get(id=list_id)
-    except:
+    except Exception as e:
+        logger.error(e)
         return Http404()
 
-    words = words_list.words.order_by('id')
+    words = words_list.words.order_by("id")
 
     # TODO: персонализировать статистику в списке?
 
@@ -98,10 +115,10 @@ def words(request, list_id):
     #     print('%s\t%s' % (n, c))
 
     context = {
-        'list': words_list,
-        'words': words,
+        "list": words_list,
+        "words": words,
     }
-    return TemplateResponse(request, 'words.html', context)
+    return TemplateResponse(request, "words.html", context)
 
 
 class ListAPIView(APIView):
@@ -109,9 +126,10 @@ class ListAPIView(APIView):
     Возвращает слова списка.
     Для списка с id = 0 нужно возвращать слова ротации.
     """
+
     def get(self, request, id, format=None):
         try:
-            if id == '0':
+            if id == "0":
                 item = RotationList(request=request)
             else:
                 item = List.objects.get(pk=id)
@@ -122,9 +140,7 @@ class ListAPIView(APIView):
 
 
 class StatAPIView(APIView):
-
     def get(self, request, format=None):
-
         today = datetime.today()
 
         start_date = today - timedelta(days=14)
@@ -134,15 +150,17 @@ class StatAPIView(APIView):
 
         # start_date = (datetime(2019, 9, 30) - timedelta(days=14)).astimezone(utc)
         counts = Attempt.objects.filter(created_at__gte=start_date, user=request.user)
-        counts = counts.extra({'dt': 'date(created_at)'}).values_list('dt').order_by('dt').annotate(cnt=Count('id'))
+        counts = counts.extra({"dt": "date(created_at)"}).values_list("dt").order_by("dt").annotate(cnt=Count("id"))
         counts = dict(counts)
 
         for single_date in daterange(start_date, end_date):
-            dt = single_date.strftime('%Y-%m-%d')
-            data.append({
-                'count': counts.get(dt, 0),
-                'date': dt,
-            })
+            dt = single_date.strftime("%Y-%m-%d")
+            data.append(
+                {
+                    "count": counts.get(dt, 0),
+                    "date": dt,
+                }
+            )
 
         return Response(data)
 
@@ -152,19 +170,20 @@ class UserListAPIView(GenericAPIView):
     Связь юзера со списком тем.
     Юзер может скрывать темы.
     """
+
     serializer_class = UserListSerializer
 
     def get_queryset(self):
         user = self.request.user
         queryset = UserList.objects.all()
         qs_filter = {
-            'user': user,
+            "user": user,
         }
         qs = queryset.filter(**qs_filter)
         return qs
 
     def post(self, request, format=None):
-        list_id = request.data['list_id']
+        list_id = request.data["list_id"]
 
         if not request.user.is_authenticated:
             return HttpResponseForbidden()
@@ -172,10 +191,12 @@ class UserListAPIView(GenericAPIView):
         try:
             instance = self.get_queryset().get(list_id=list_id)
         except UserList.DoesNotExist:
-            instance = UserList(**{
-                'user': request.user,
-                'list': List.objects.get(pk=list_id),
-            })
+            instance = UserList(
+                **{
+                    "user": request.user,
+                    "list": List.objects.get(pk=list_id),
+                }
+            )
             instance.save()
         serializer = self.get_serializer(instance, data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -186,7 +207,7 @@ class UserListAPIView(GenericAPIView):
             user.update_rotation()
             user_rotation = user.rotation
 
-            print('user_rotation', user_rotation)
+            print("user_rotation", user_rotation)
 
         return Response(serializer.data)
 
@@ -195,19 +216,20 @@ class HideWordAPIView(GenericAPIView):
     """
     Сокрытие слова от юзера.
     """
+
     serializer_class = UserWordSerializer
 
     def get_queryset(self):
         user = self.request.user
         queryset = UserWord.objects.all()
         qs_filter = {
-            'user': user,
+            "user": user,
         }
         qs = queryset.filter(**qs_filter)
         return qs
 
     def post(self, request, format=None):
-        word_id = request.data['word_id']
+        word_id = request.data["word_id"]
 
         if not request.user.is_authenticated:
             return HttpResponseForbidden()
@@ -215,10 +237,12 @@ class HideWordAPIView(GenericAPIView):
         try:
             instance = self.get_queryset().get(word_id=word_id)
         except UserWord.DoesNotExist:
-            instance = UserWord(**{
-                'user': request.user,
-                'word': Word.objects.get(pk=word_id),
-            })
+            instance = UserWord(
+                **{
+                    "user": request.user,
+                    "word": Word.objects.get(pk=word_id),
+                }
+            )
             instance.save()
         serializer = self.get_serializer(instance, data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -227,16 +251,14 @@ class HideWordAPIView(GenericAPIView):
         # попытка как-то попроще обновить ротацию (удалить только это слово)
         if request.user.is_authenticated:
             user = User.objects.get(id=request.user.pk)
-            user.rotation = (' %s ' % user.rotation).replace('%s ' % word_id, ' ').strip()
+            user.rotation = (" %s " % user.rotation).replace("%s " % word_id, " ").strip()
             user.save()
 
         return Response(serializer.data)
 
 
 class ListAPIListView(APIView):
-
     def get(self, request, format=None):
-
         # Если анонимный юзер — показываем все публичные (sharable) темы
         # Если юзер залогинен, то он видит:
         #   все публичные темы
@@ -244,7 +266,7 @@ class ListAPIListView(APIView):
         #   свои подписки (subscriptions)
 
         if request.user.is_authenticated:
-            subscriptions = request.user.user_subscriptions.values_list('id', flat=True)
+            subscriptions = request.user.user_subscriptions.values_list("id", flat=True)
             items = List.objects.filter(id__in=subscriptions)
 
             # print('subscriptions', subscriptions)
@@ -260,7 +282,6 @@ class ListAPIListView(APIView):
 
 
 class WordAPIView(APIView):
-
     def get(self, request, id, format=None):
         try:
             item = Word.objects.get(pk=id)
@@ -271,19 +292,17 @@ class WordAPIView(APIView):
 
 
 class Test1APIView(APIView):
-
     def get(self, request, id, format=None):
-
         # тест всегда по RotationList, даже если указан id списка
         rl = RotationList(request)
         words_to_test = rl.words
 
-        all_words = Word.objects.all().exclude(definitions=None).order_by('?').values_list('spelling', flat=True)[:300]
+        all_words = Word.objects.all().exclude(definitions=None).order_by("?").values_list("spelling", flat=True)[:300]
 
         quizlist = []
 
         for word in words_to_test:
-            definitions = word.definitions.all().order_by('?')
+            definitions = word.definitions.all().order_by("?")
             if not definitions:
                 continue
 
@@ -305,28 +324,28 @@ class Test1APIView(APIView):
             else:
                 pronunciation_url = None
 
-            quizlist.append({
-                'word': WordSerializer(word).data,
-                'word_id': word.id,
-                'definition_id': definition.id,
-                'quiz': definition.translation or definition.interpretation,
-                'options': options,
-                'answer': options.index(word.spelling),
-                'pronunciation': pronunciation_url,
-            })
+            quizlist.append(
+                {
+                    "word": WordSerializer(word).data,
+                    "word_id": word.id,
+                    "definition_id": definition.id,
+                    "quiz": definition.translation or definition.interpretation,
+                    "options": options,
+                    "answer": options.index(word.spelling),
+                    "pronunciation": pronunciation_url,
+                }
+            )
 
         data = {
-            'results': quizlist,
+            "results": quizlist,
         }
 
         return Response(data)
 
 
 class TestTensesAPIView(APIView):
-
     def get(self, request, format=None):
-
-        data = '''Actions in stories	Past Simple
+        data = """Actions in stories	Past Simple
 Finished time period	Past Simple
 Details of news	Past Simple
 An action at a precise time before now	Past Simple
@@ -359,27 +378,27 @@ An action at unspecified time before now	Present Perfect
 Present result of an action	Present Perfect
 Something started in the past and has continued up until now	Present Perfect Continuous
 Present result of a process	Present Perfect Continuous
-Temporary situations, emphasis on duration	Present Perfect Continuous'''
+Temporary situations, emphasis on duration	Present Perfect Continuous"""
 
-        data = data.split('\n')
+        data = data.split("\n")
 
         quizlist = []
 
         tenses = [
-            'Past Simple',
-            'Past Continuous',
-            'Past Perfect',
-            'Past Perfect Continuous',
-            'Present Simple',
-            'Present Continuous',
-            'Present Perfect',
-            'Present Perfect Continuous',
+            "Past Simple",
+            "Past Continuous",
+            "Past Perfect",
+            "Past Perfect Continuous",
+            "Present Simple",
+            "Present Continuous",
+            "Present Perfect",
+            "Present Perfect Continuous",
         ]
 
         random.shuffle(data)
 
         for i, line in enumerate(data):
-            example, tense = line.split('\t')
+            example, tense = line.split("\t")
 
             options = list(set(tenses))
             options.remove(tense)
@@ -388,42 +407,43 @@ Temporary situations, emphasis on duration	Present Perfect Continuous'''
             options.append(tense)
             random.shuffle(options)
 
-            quizlist.append({
-                'word': {
-                    'definitions': [],
-                    'spelling': example,
-                    'transcription': '',
-                    'pronunciation': '',
-                },
-                'word_id': i,
-                'definition_id': i,
-                'quiz': example,
-                'options': options,
-                'answer': options.index(tense),
-            })
+            quizlist.append(
+                {
+                    "word": {
+                        "definitions": [],
+                        "spelling": example,
+                        "transcription": "",
+                        "pronunciation": "",
+                    },
+                    "word_id": i,
+                    "definition_id": i,
+                    "quiz": example,
+                    "options": options,
+                    "answer": options.index(tense),
+                }
+            )
 
         data = {
-            'results': quizlist,
+            "results": quizlist,
         }
 
         return Response(data)
 
 
 class Test2APIView(APIView):
-
     def get(self, request, id, format=None):
         # статусы, подходящие для этого теста
         # statuses = [
         #     Word.Status.Rotation.value,
         #     Word.Status.Studying.value,
         # ]
-        words_to_test = Word.objects.filter(list__id=id).order_by('?')
+        words_to_test = Word.objects.filter(list__id=id).order_by("?")
         # all_words = Word.objects.all().exclude(part_of_speech='phrasal_verb').order_by('?').values_list('spelling', flat=True)[:300]
 
         quizlist = []
 
         for word in words_to_test:
-            definitions = word.definitions.all().order_by('?')
+            definitions = word.definitions.all().order_by("?")
             if not definitions:
                 continue
 
@@ -431,13 +451,13 @@ class Test2APIView(APIView):
             definition = definitions[0]
             answer = definition.spelling
 
-            options = Word.objects.all().order_by('?')
+            options = Word.objects.all().order_by("?")
 
             # совпадение части речи
             if word.part_of_speech:
                 options = options.filter(part_of_speech=word.part_of_speech)
             else:
-                options = options.exclude(part_of_speech='phrasal_verb')
+                options = options.exclude(part_of_speech="phrasal_verb")
 
             def distance(el):
                 # res = jellyfish.jaro_distance(word.spelling, el.spelling)
@@ -480,35 +500,35 @@ class Test2APIView(APIView):
             else:
                 pronunciation_url = None
 
-            quizlist.append({
-                'word': WordSerializer(word).data,
-                'word_id': word.id,
-                'definition_id': definition.id,
-                'quiz': definition.translation or definition.interpretation,
-                'options': final_options_texts,
-                'answer': final_options_texts.index(answer),
-                'pronunciation': pronunciation_url,
-            })
+            quizlist.append(
+                {
+                    "word": WordSerializer(word).data,
+                    "word_id": word.id,
+                    "definition_id": definition.id,
+                    "quiz": definition.translation or definition.interpretation,
+                    "options": final_options_texts,
+                    "answer": final_options_texts.index(answer),
+                    "pronunciation": pronunciation_url,
+                }
+            )
 
         data = {
-            'results': quizlist,
+            "results": quizlist,
         }
 
         return HttpResponse(
-            json.dumps(data, ensure_ascii=False),
-            status=200,
-            content_type='application/json; charset=utf-8')
+            json.dumps(data, ensure_ascii=False), status=200, content_type="application/json; charset=utf-8"
+        )
 
 
 class TestPhrasalAPIView(APIView):
-
     def find_by_distance(self, verb, text):
-        words = text.split(' ')
+        words = text.split(" ")
         max_val = 0.1
         final = None
         for word in words:
             word_clean = word.lower().strip()
-            if word_clean[-3:] == 'ing':
+            if word_clean[-3:] == "ing":
                 word_clean = word_clean[:-3]
             res = jellyfish.jaro_distance(word_clean, verb)
             if res > max_val:
@@ -525,27 +545,28 @@ class TestPhrasalAPIView(APIView):
         #     Word.Status.Rotation.value,
         #     Word.Status.Studying.value,
         # ]
-        words_to_test = Word.objects.filter(list__id=id).order_by('?')
+        words_to_test = Word.objects.filter(list__id=id).order_by("?")
 
         quizlist = []
 
         all_verbs = []
         all_adverb_particle = []
         all_prepositions = SOME_PREPS
-        for w in Word.objects.filter(list__id=id).order_by('?')[:50]:
-            verb = w.spelling.split(' ')[0]
+        for w in Word.objects.filter(list__id=id).order_by("?")[:50]:
+            verb = w.spelling.split(" ")[0]
             try:
-                adverb_particle = w.spelling.split(' ')[1]
-            except:
+                adverb_particle = w.spelling.split(" ")[1]
+            except Exception as e:
+                logger.error(e)
                 adverb_particle = w.spelling
             all_verbs.append(verb)
-            all_adverb_particle = all_adverb_particle + adverb_particle.split('/')
+            all_adverb_particle = all_adverb_particle + adverb_particle.split("/")
 
         all_verbs = list(set(all_verbs))
         all_adverb_particle = list(set(all_adverb_particle))
 
         for word in words_to_test:
-            definitions = word.definitions.all().order_by('?')
+            definitions = word.definitions.all().order_by("?")
             if not definitions:
                 continue
 
@@ -554,48 +575,47 @@ class TestPhrasalAPIView(APIView):
             answer = definition.spelling
 
             # случайный пример
-            e = definition.examples.order_by('?').first()
+            e = definition.examples.order_by("?").first()
             if not e:
                 continue
 
-            quiz_text = ' ' + e.text
+            quiz_text = " " + e.text
             # quiz_text = quiz_text.replace(' ' + adverb_particle, ' __%s__' % adverb_particle)
 
             if word.part_of_speech == Word.Pos.Phrasal_verb.value:
-
-                verb = word.spelling.split(' ')[0]
-                adverb_particle = word.spelling.split(' ')[1]
+                verb = word.spelling.split(" ")[0]
+                adverb_particle = word.spelling.split(" ")[1]
 
                 try:
-                    preposition = word.spelling.split(' ')[2]
+                    preposition = word.spelling.split(" ")[2]
                 except IndexError:
                     preposition = None
 
                 # quiz_text = quiz_text.replace(' ' + adverb_particle, ' ____')
-                adverb_particle_used = ''
-                for ap in adverb_particle.split('/'):
+                adverb_particle_used = ""
+                for ap in adverb_particle.split("/"):
                     if ap in quiz_text:
-                        quiz_text = quiz_text.replace(' ' + ap, ' ____')
+                        quiz_text = quiz_text.replace(" " + ap, " ____")
                         adverb_particle_used = ap
                         break
 
-                quiz_text = quiz_text.lstrip(' ')
+                quiz_text = quiz_text.lstrip(" ")
 
                 res = self.find_by_distance(verb, quiz_text)
 
                 if res:
                     if verb in quiz_text.lower():
                         # logger.debug('\n' + e_text.replace(res, '__%s__' % res))
-                        quiz_text = quiz_text.replace(res, '____')
+                        quiz_text = quiz_text.replace(res, "____")
                     else:
                         # logger.warning('\n' + e_text.replace(res, '__%s__' % res))
-                        quiz_text = quiz_text.replace(res, '____')
+                        quiz_text = quiz_text.replace(res, "____")
                 else:
-                    logger.error('err: %s \t %s' % (verb, quiz_text))
+                    logger.error("err: %s \t %s" % (verb, quiz_text))
                     continue
 
                 if preposition:
-                    quiz_text = quiz_text.replace('____ %s' % preposition, '____ ____')
+                    quiz_text = quiz_text.replace("____ %s" % preposition, "____ ____")
 
                 # варианты ответов
                 random.shuffle(all_verbs)
@@ -609,82 +629,68 @@ class TestPhrasalAPIView(APIView):
                 random.shuffle(p_options)
 
                 options_set = [
-                    {
-                        'options': v_options,
-                        'answer': v_options.index(verb)
-                    }, {
-                        'options': p_options,
-                        'answer': p_options.index(adverb_particle_used)
-                    },
+                    {"options": v_options, "answer": v_options.index(verb)},
+                    {"options": p_options, "answer": p_options.index(adverb_particle_used)},
                 ]
 
                 # если дали еще и предлог
                 if preposition:
                     pp_options = ([preposition] + list(set(all_prepositions) - {preposition}))[:5]
                     random.shuffle(pp_options)
-                    options_set.append({
-                        'options': pp_options,
-                        'answer': pp_options.index(preposition)
-                    })
+                    options_set.append({"options": pp_options, "answer": pp_options.index(preposition)})
 
             else:
                 ###############################
                 # словосочетания с предлогами #
                 ###############################
 
-                item = ' '.join(definition.spelling.split(' ')[:-1])  # всё, кроме последнего куска
-                preposition = ' '.join(definition.spelling.split(' ')[-1:])  # последний кусок
+                item = " ".join(definition.spelling.split(" ")[:-1])  # всё, кроме последнего куска
+                preposition = " ".join(definition.spelling.split(" ")[-1:])  # последний кусок
 
                 res = self.find_by_distance(item, quiz_text)
 
                 if res:
                     head, sep, tail = quiz_text.partition(res)
-                    tail = tail.replace(preposition, '____', 1)
+                    tail = tail.replace(preposition, "____", 1)
                     quiz_text = head + sep + tail
                 else:
-                    quiz_text = quiz_text.replace(preposition, '____', 1)
+                    quiz_text = quiz_text.replace(preposition, "____", 1)
 
                 quiz_text = quiz_text.strip()
 
                 pp_options = ([preposition] + list(set(all_prepositions) - {preposition}))[:5]
                 random.shuffle(pp_options)
 
-                options_set = [
-                    {
-                        'options': pp_options,
-                        'answer': pp_options.index(preposition)
-                    }
-                ]
+                options_set = [{"options": pp_options, "answer": pp_options.index(preposition)}]
 
-            quizlist.append({
-                'word': WordSerializer(word).data,
-                'word_id': word.id,
-                'definition_id': definition.id,
-                'quiz': quiz_text,
-                'quiz_answer': e.text,
-                'quiz_hint': definition.translation or definition.interpretation,
-                'options_set': options_set,
-            })
+            quizlist.append(
+                {
+                    "word": WordSerializer(word).data,
+                    "word_id": word.id,
+                    "definition_id": definition.id,
+                    "quiz": quiz_text,
+                    "quiz_answer": e.text,
+                    "quiz_hint": definition.translation or definition.interpretation,
+                    "options_set": options_set,
+                }
+            )
 
         data = {
-            'results': quizlist[:10],
+            "results": quizlist[:10],
         }
 
         return HttpResponse(
-            json.dumps(data, ensure_ascii=False),
-            status=200,
-            content_type='application/json; charset=utf-8')
+            json.dumps(data, ensure_ascii=False), status=200, content_type="application/json; charset=utf-8"
+        )
 
 
 class AttemptAPIView(APIView):
-
     def post(self, request, format=None):
-
         data = dict(request.data)
 
         if request.user.is_authenticated:
             # добавить юзера к данным
-            data['user'] = request.user.pk
+            data["user"] = request.user.pk
         else:
             # ничего не делать
             return Response({}, status=200)
@@ -735,82 +741,80 @@ class AttemptAPIView(APIView):
 
 
 def replace_spaces(match):
-    return '[' + match.group(1).replace(' ', ' ') + '](' + match.group(2).replace(' ', ' ') + ')'
+    return "[" + match.group(1).replace(" ", " ") + "](" + match.group(2).replace(" ", " ") + ")"
 
 
 def sentence_converter(s):
-    return re.sub(r'\[(.*?)\]\s*\((.*?)\)', replace_spaces, s)
+    return re.sub(r"\[(.*?)\]\s*\((.*?)\)", replace_spaces, s)
 
 
 def sentence_task(request):
-
     # выбирается случайная запись из 20% наименее изученных
     cnt = Sentence.objects.count()
-    cnt = min(cnt/5, 30)
-    sents = Sentence.objects.filter(is_hidden=False).order_by('success_cnt', 'error_cnt')[:cnt]
+    cnt = min(cnt / 5, 30)
+    sents = Sentence.objects.filter(is_hidden=False).order_by("success_cnt", "error_cnt")[:cnt]
     sent = random.choice(sents)
 
     text = sentence_converter(sent.text)
-    text = text.replace(' [', ' [')
+    text = text.replace(" [", " [")
 
     # text = '[Have you ever been](you ever be) here? Yes, I [was](be) here on holiday last year.'
 
     words = []
-    for lemma in text.split(' '):
-        if lemma and lemma[0] == '[':
-            lemma = lemma.strip('[').strip(')').strip()
-            answer, hint = lemma.split('](')
-            answers = list(map(lambda s: s.replace(' ', ' ').lower().strip(), answer.split('/')))
-            words.append({
-                'hint': hint,
-                'answers': answers,
-                'source': answers[0],
-            })
+    for lemma in text.split(" "):
+        if lemma and lemma[0] == "[":
+            lemma = lemma.strip("[").strip(")").strip()
+            answer, hint = lemma.split("](")
+            answers = list(map(lambda s: s.replace(" ", " ").lower().strip(), answer.split("/")))
+            words.append(
+                {
+                    "hint": hint,
+                    "answers": answers,
+                    "source": answers[0],
+                }
+            )
         else:
-            words.append({
-                'text': lemma,
-            })
+            words.append(
+                {
+                    "text": lemma,
+                }
+            )
 
     res = {
-        'id': sent.id,
-        'is_flaged': sent.is_flaged,
+        "id": sent.id,
+        "is_flaged": sent.is_flaged,
         # 'success_cnt': sent.success_cnt,
         # 'error_cnt': sent.error_cnt,
-        'text': sent.text,
-        'words': words,
+        "text": sent.text,
+        "words": words,
     }
 
-    return HttpResponse(
-        json.dumps(res, ensure_ascii=False),
-        status=200,
-        content_type='application/json; charset=utf-8')
+    return HttpResponse(json.dumps(res, ensure_ascii=False), status=200, content_type="application/json; charset=utf-8")
 
 
 def sentence_status(request):
     """
     Действия с предложениями
     """
-    sentence_id = request.POST.get('sentence_id')
-    action = request.POST.get('action')
+    sentence_id = request.POST.get("sentence_id")
+    action = request.POST.get("action")
 
     sentence = Sentence.objects.get(id=sentence_id)
 
-    if action == 'hide':
+    if action == "hide":
         sentence.is_hidden = True
 
-    if action == 'flag':
+    if action == "flag":
         sentence.is_flaged = True
 
-    if action == '-hide':
+    if action == "-hide":
         sentence.is_hidden = False
 
-    if action == '-flag':
+    if action == "-flag":
         sentence.is_flaged = False
 
     sentence.save()
 
     return HttpResponse(
-        json.dumps({'status': 'ok'}, ensure_ascii=False),
-        status=200,
-        content_type='application/json; charset=utf-8'
+        json.dumps({"status": "ok"}, ensure_ascii=False), status=200, content_type="application/json; charset=utf-8"
     )

@@ -3,23 +3,22 @@ import logging
 from django.db.models import Count
 from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
-from main.models import List, Word, Definition, Example, Pronunciation, Attempt, UserList, UserWord
+
+from main.models import Attempt, Definition, Example, List, Pronunciation, UserList, UserWord, Word
 
 logger = logging.getLogger(__name__)
 
 
 class PronunciationSerializer(ModelSerializer):
-
     class Meta:
         model = Pronunciation
-        fields = ['id', 'audio', 'description']
+        fields = ["id", "audio", "description"]
 
 
 class ExampleSerializer(ModelSerializer):
-
     class Meta:
         model = Example
-        fields = ['id', 'text']
+        fields = ["id", "text"]
 
 
 class DefinitionSerializer(ModelSerializer):
@@ -28,7 +27,7 @@ class DefinitionSerializer(ModelSerializer):
 
     class Meta:
         model = Definition
-        fields = ['id', 'spelling', 'interpretation', 'translation', 'level', 'context', 'note', 'examples']
+        fields = ["id", "spelling", "interpretation", "translation", "level", "context", "note", "examples"]
 
 
 class WordSerializer(ModelSerializer):
@@ -41,14 +40,16 @@ class WordSerializer(ModelSerializer):
         """
         Юзер нужен для подсчета количества ответов по данному слову
         """
-        self.user = kwargs.pop('user', None)
+        self.user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
 
     def get_score(self, obj):
         if (self.user is None) or not self.user.is_authenticated:
             score = 0
         else:
-            all_res = str(list(Attempt.objects.filter(user_id=self.user.pk, word_id=obj.id).values_list('result', flat=True)))
+            all_res = str(
+                list(Attempt.objects.filter(user_id=self.user.pk, word_id=obj.id).values_list("result", flat=True))
+            )
             success_cnt = all_res.count("'success'")
             error_cnt = all_res.count("'error'")
 
@@ -57,7 +58,7 @@ class WordSerializer(ModelSerializer):
         return score
 
     def get_pronunciation(self, obj):
-        pronunciation = obj.pronunciations.order_by('-description').first()
+        pronunciation = obj.pronunciations.order_by("-description").first()
         if pronunciation:
             return pronunciation.audio.url
         return None
@@ -70,7 +71,7 @@ class WordSerializer(ModelSerializer):
             if d.level:
                 leveled_count += 1
         if leveled_count > 3:
-            qs = obj.definitions.exclude(level='').exclude(level=None)
+            qs = obj.definitions.exclude(level="").exclude(level=None)
         if leveled_count == 0:
             qs = qs[:3]
         else:
@@ -79,8 +80,17 @@ class WordSerializer(ModelSerializer):
 
     class Meta:
         model = Word
-        fields = ['id', 'spelling', 'is_hidden', 'definitions', 'pronunciation',
-                  'transcription', 'part_of_speech', 'zipf', 'score']
+        fields = [
+            "id",
+            "spelling",
+            "is_hidden",
+            "definitions",
+            "pronunciation",
+            "transcription",
+            "part_of_speech",
+            "zipf",
+            "score",
+        ]
 
 
 class ListSerializer(ModelSerializer):
@@ -89,12 +99,12 @@ class ListSerializer(ModelSerializer):
     new_count = SerializerMethodField()
 
     def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user')
+        self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
 
     def get_count(self, obj):
         if self.user and self.user.is_authenticated:
-            hidden_word_ids = UserWord.objects.filter(user_id=self.user.pk, word__list=obj).values('word_id')
+            hidden_word_ids = UserWord.objects.filter(user_id=self.user.pk, word__list=obj).values("word_id")
             cnt = Word.objects.filter(list=obj).exclude(id__in=hidden_word_ids).count()
             return cnt
         return obj.words.count()
@@ -110,18 +120,18 @@ class ListSerializer(ModelSerializer):
 
     def get_new_count(self, obj):
         if self.user and self.user.is_authenticated:
-            hidden_word_ids = UserWord.objects.filter(user_id=self.user.pk, word__list=obj).values('word_id')
+            hidden_word_ids = UserWord.objects.filter(user_id=self.user.pk, word__list=obj).values("word_id")
 
             new = Word.objects.filter(list=obj)
             new = new.exclude(id__in=hidden_word_ids)
-            new = new.annotate(attempts_cnt=Count('attempts'))
+            new = new.annotate(attempts_cnt=Count("attempts"))
             new_cnt = new.filter(attempts_cnt=0).count()
             return new_cnt
         return None
 
     class Meta:
         model = List
-        fields = ['id', 'name', 'count', 'new_count', 'hidden']
+        fields = ["id", "name", "count", "new_count", "hidden"]
 
 
 class UserListSerializer(ModelSerializer):
@@ -130,7 +140,7 @@ class UserListSerializer(ModelSerializer):
 
     class Meta:
         model = UserList
-        fields = ['user', 'list', 'hidden']
+        fields = ["user", "list", "hidden"]
 
 
 class UserWordSerializer(ModelSerializer):
@@ -139,7 +149,7 @@ class UserWordSerializer(ModelSerializer):
 
     class Meta:
         model = UserList
-        fields = ['user', 'word', 'hidden']
+        fields = ["user", "word", "hidden"]
 
 
 class ListDetailsSerializer(ModelSerializer):
@@ -150,7 +160,7 @@ class ListDetailsSerializer(ModelSerializer):
         """
         Юзер нужен для подсчета количества ответов по данному слову
         """
-        self.user = kwargs.pop('user', None)
+        self.user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
 
     def get_words(self, obj):
@@ -159,18 +169,17 @@ class ListDetailsSerializer(ModelSerializer):
         # отфильтровать те, которые выключены
         if self.user and self.user.is_authenticated:
             # все слова данного списка, которые выключены у юзера
-            hidden_word_ids = UserWord.objects.filter(user=self.user).values('word_id')
+            hidden_word_ids = UserWord.objects.filter(user=self.user).values("word_id")
             qs = qs.exclude(id__in=hidden_word_ids)
 
         return WordSerializer(qs[:200], user=self.user, many=True).data
 
     class Meta:
         model = List
-        fields = ['id', 'name', 'words']
+        fields = ["id", "name", "words"]
 
 
 class AttemptSerializer(ModelSerializer):
-
     class Meta:
         model = Attempt
-        fields = '__all__'
+        fields = "__all__"

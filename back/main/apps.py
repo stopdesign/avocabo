@@ -5,9 +5,10 @@ class MainConfig(AppConfig):
     """
     Django app config for main.
     """
-    name = 'main'
+
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "main"
 
     def ready(self):
-
         # подключаю сигналы
         import main.signals
