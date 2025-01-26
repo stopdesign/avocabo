@@ -171,6 +171,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ),
     # 'DEFAULT_PARSER_CLASSES': (
     #     'main.drf.CustomJSONParser',

@@ -21,9 +21,10 @@ migrate:
 makemigrations:
 	$(VENV) $(MANAGER) makemigrations --noinput
 
-.PHONY : runserver
-runserver:
+.PHONY : run
+run:
 	$(VENV) $(MANAGER) runserver 127.0.0.1:8120
+	#$(VENV) $(MANAGER) runserver 0.0.0.0:8120
 
 .PHONY : reload
 reload:
