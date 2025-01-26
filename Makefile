@@ -1,35 +1,54 @@
-ROOT_DIR = $(CURDIR)
-SOURCE_DIR = $(CURDIR)/back
+BASE_DIR = $(CURDIR)
 
-MANAGER = python $(SOURCE_DIR)/manage.py
-VENV = . $(ROOT_DIR)/.venv/bin/activate;
-SUPERVISOR = sudo supervisorctl
+MANAGE = python $(BASE_DIR)/back/manage.py
+VENV = . $(BASE_DIR)/.venv/bin/activate; \
 
-.PHONY : static
-static:
-	$(VENV) $(MANAGER) collectstatic --noinput
+FMT = printf "\033[34m%-20s\033[0m %s\n"
+RGX = /^[0-9a-zA-Z_-]+:.*?\#/
 
-.PHONY : pip
-pip:
-	$(VENV) pip install --exists-action s -r $(ROOT_DIR)/requirements.txt
+help :: # Show this message
+	@awk '{FS=": #"} $(RGX) {$(FMT),$$1,$$2}' $(MAKEFILE_LIST)
 
-.PHONY : migrate
-migrate:
-	$(VENV) $(MANAGER) migrate --noinput
+clean: # Clean project
+	find . -name "*.pyc" -delete
+	find . -name "*.orig" -delete
 
-.PHONY : makemigrations
-makemigrations:
-	$(VENV) $(MANAGER) makemigrations --noinput
+pip: # Install python dependencies
+	$(VENV) pip install -r $(BASE_DIR)/requirements.txt \
+	--upgrade --no-python-version-warning
 
-.PHONY : run
-run:
-	$(VENV) $(MANAGER) runserver 127.0.0.1:8120
-	#$(VENV) $(MANAGER) runserver 0.0.0.0:8120
+static: # Django: collectstatic
+	$(VENV) $(MANAGE) collectstatic --noinput
 
-.PHONY : reload
-reload:
-	cd $(ROOT_DIR) ; touch reload
+migrate: # Django: migrate
+	$(VENV) $(MANAGE) migrate --noinput
 
-# Update instance
-.PHONY : update
-update: pip migrate static reload
+test: # Django: test
+	$(VENV) $(MANAGE) test --noinput
+
+run: # Django: runserver at 127.0.0.1:8800
+	$(VENV) $(MANAGE) runserver 127.0.0.1:8120
+
+run0: # Django: runserver at 0.0.0.0:8800
+	$(VENV) $(MANAGE) runserver 0.0.0.0:8120
+
+touch_reload: # Reload instance
+	cd $(BASE_DIR) && touch reload
+
+update: # Run multiple targets
+	make pip migrate static
+	service bookest_dev_django restart
+
+count: # Count code lines with cloc
+	cloc --vcs git \
+		--exclude-dir=migrations,libs,plugins \
+		--exclude-lang=SVG,JSON,YAML,Text,make,Markdown,TOML,INI,"PO File" \
+		--not-match-f='min.js|min.css|bootstrap|icons.css' \
+		--quiet
+
+# deploy: # Deploy via ssh
+# 	$(SSH) "cd $(SERVER_PATH) && git reset --hard HEAD"
+# 	@echo ""
+# 	$(SSH) "cd $(SERVER_PATH) && git pull -f --quiet"
+# 	@echo ""
+# 	$(SSH) "cd $(SERVER_PATH) && make update"

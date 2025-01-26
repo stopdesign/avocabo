@@ -1,4 +1,4 @@
-Django==4.2
+Django == 5.1.*
 uwsgi
 django-constance[database]
 django-admin-sortable2
